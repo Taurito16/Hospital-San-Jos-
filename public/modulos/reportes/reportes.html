@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Hospital San José</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="main-wrapper">
+        <main class="page-content" id="page-content">
+            <div class="module-card dark-theme">
+                <h3>Vista en desarrollo</h3>
+                <p>Módulo de generación de reportes y exportación irá aquí.</p>
+                <a href="../../menu.html" class="btn-module primary" style="width: fit-content; margin-top:20px;">
+                    <i class="fa-solid fa-arrow-left"></i> Volver al Menú
+                </a>
+            </div>
+        </main>
+    </div>
+    <script src="../../js/supabase-config.js"></script>
+    <script src="../../js/layout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
+

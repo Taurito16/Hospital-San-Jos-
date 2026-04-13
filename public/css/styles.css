@@ -1,0 +1,876 @@
+/* RESET */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* BODY */
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    height: 100vh;
+}
+
+/* LAYOUT DE PANTALLA COMPLETA */
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    /* Usa un fondo representativo. Ajusta el nombre según tu imagen grande */
+    background: url('../img/fondo.jpg') center/cover no-repeat fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+}
+
+/* OVERLAY OSCURO PARA MEJORAR LECTURA */
+.login-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    /* Oscuridad premium */
+    z-index: 1;
+}
+
+/* TARJETA DEL FORMULARIO CENTRAL */
+.login-card {
+    position: relative;
+    z-index: 2;
+    background: #ffffff;
+    /* Formulario de color blanco sólido */
+    border-radius: 12px;
+    padding: 70px 40px 40px;
+    /* Padding superior mayor para el logo circular */
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    /* Sombra leve */
+    margin-top: 65px;
+    /* Espacio para que sobresalga el logo */
+}
+
+/* CÍRCULO DEL LOGO */
+.logo-circle {
+    position: absolute;
+    top: -65px;
+    /* Sobresale hacia arriba */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    /* Círculo más grande */
+    height: 130px;
+    background: #ffffff;
+    /* Fondo blanco sólido */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* Sombra leve a juego */
+    overflow: hidden;
+    padding: 10px;
+    /* Para que el logo no toque los bordes */
+}
+
+.company-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.login-form h2 {
+    margin-bottom: 25px;
+    color: #333333;
+    /* Texto oscuro sobre fondo blanco */
+    font-size: 26px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* INPUTS REDUCIDOS EN CURVATURA */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: #555555;
+    /* Etiqueta oscura */
+    margin-bottom: 8px;
+    display: block;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px;
+    background: #f8fafc;
+    /* Fondo de input muy sutil */
+    border: 1px solid #cbd5e1;
+    /* Borde más visible */
+    border-radius: 4px;
+    /* Curvatura reducida pautada */
+    outline: none;
+    transition: all 0.3s;
+    box-sizing: border-box;
+    color: #1e293b;
+}
+
+.form-group input:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* PASSWORD */
+.password-wrapper {
+    position: relative;
+    display: flex;
+}
+
+.toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #64748b;
+    /* Ícono oscuro */
+    font-size: 17px;
+    padding: 0;
+}
+
+/* RECORDAR */
+.remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    color: #555555;
+    /* Texto oscuro */
+}
+
+/* BOTÓN */
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    background: #3b82f6;
+    /* Azul moderno */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    /* Curvatura reducida combinada */
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.login-btn:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.5);
+}
+
+.login-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: #94a3b8;
+    box-shadow: none;
+}
+
+/* SPINNER */
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    position: absolute;
+    animation: spin 0.6s linear infinite;
+}
+
+.hidden {
+    display: none;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-msg {
+    color: #8b0000;
+    font-size: 14px;
+    margin-top: 15px;
+    text-align: center;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.error-msg:empty {
+    display: none;
+}
+
+/* =========================================================
+   APP LAYOUT (Sidebar + Main Content)
+   ========================================================= */
+body {
+    background-color: #f8fafc;
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-left: 280px;
+    /* Espacio para el sidebar */
+    transition: all 0.3s;
+    position: relative;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #ffffff;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.03);
+    z-index: 1000;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-top: 25px;
+}
+
+.sidebar-header {
+    padding: 0 25px;
+    text-align: left;
+}
+
+.sidebar-header h2 {
+    color: #1e293b;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.sidebar-header p {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.sidebar-divider {
+    border: 0;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    margin: 20px 25px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0 15px;
+    flex-grow: 1;
+}
+
+.nav-item {
+    margin-bottom: 6px;
+    position: relative;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 13px 18px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-link i {
+    width: 24px;
+    font-size: 18px;
+    margin-right: 12px;
+    text-align: center;
+    transition: color 0.2s ease;
+}
+
+/* Hover & Active States for main nav links */
+.nav-item:hover>.nav-link,
+.nav-item.active>.nav-link {
+    color: #3b82f6;
+    /* Celeste/Blue activo */
+    background: rgba(59, 130, 246, 0.05);
+    /* Fondo suave */
+}
+
+.nav-item.active>.nav-link {
+    font-weight: 600;
+}
+
+/* Franja curva celeste en seleccionados */
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    width: 4px;
+    background: #3b82f6;
+    border-radius: 0 5px 5px 0;
+}
+
+/* Sub-menús escondidos */
+.sub-menu {
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 54px;
+    transition: max-height 0.3s ease, margin 0.3s ease;
+    opacity: 0;
+}
+
+.nav-item.has-sub:hover .sub-menu,
+.nav-item.has-sub.active .sub-menu {
+    max-height: 200px;
+    opacity: 1;
+    margin-bottom: 12px;
+}
+
+.sub-menu a {
+    display: block;
+    padding: 8px 0;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.sub-menu a:hover,
+.sub-menu a.selected {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* HEADER TOP */
+.top-header {
+    position: absolute;
+    top: 25px;
+    right: 40px;
+    left: 320px; /* Para que inicie tras el sidebar y el espacio padding */
+    background: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Evitar justificar inicio cuando no hay header izquierdo (menu.html) */
+.top-header:has(> .header-right:only-child) {
+    justify-content: flex-end;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 500px;
+}
+
+.global-search-box {
+    display: flex;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+
+.global-search-input {
+    flex: 1;
+    border: none;
+    padding: 12px 20px;
+    font-size: 14px;
+    outline: none;
+    color: #1e293b;
+}
+
+.global-search-btn {
+    border: none;
+    background: #f8fafc;
+    color: #64748b;
+    padding: 0 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 1px solid #e2e8f0;
+}
+
+.global-search-btn:hover {
+    background: #e2e8f0;
+    color: #3b82f6;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-role-badge {
+    background: #e0f2fe;
+    /* Celeste suave */
+    color: #0284c7;
+    /* Azul oscuro texto */
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(2, 132, 199, 0.1);
+}
+
+.profile-dropdown {
+    position: relative;
+}
+
+.profile-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    transition: color 0.3s;
+}
+
+.profile-btn:hover {
+    color: #3b82f6;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    min-width: 180px;
+    display: none;
+    flex-direction: column;
+    padding: 10px 0;
+    z-index: 100;
+}
+
+.dropdown-menu.show {
+    display: flex;
+}
+
+.dropdown-menu a {
+    padding: 12px 20px;
+    color: #475569;
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-menu a:hover {
+    background: #f8fafc;
+    color: #3b82f6;
+}
+
+.dropdown-menu a.logout {
+    color: #ef4444;
+}
+
+.dropdown-menu a.logout:hover {
+    background: #fef2f2;
+}
+
+/* PAGE CONTENT */
+.page-content {
+    padding: 100px 40px 40px;
+    max-width: 1400px;
+    width: 100%;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 0;
+    /* 🔥 CLAVE */
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    font-size: 16px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* GRID DE MÓDULOS */
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+/* TARJETAS REUTILIZABLES */
+.module-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.module-card.span-2 {
+    grid-column: span 2;
+}
+
+@media (max-width: 1000px) {
+    .module-card.span-2 {
+        grid-column: span 1;
+        /* Ruptura responsive */
+    }
+}
+
+.module-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+}
+
+.module-card.dark-theme {
+    background: #2e3132;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.module-card.dark-theme h3,
+.module-card.dark-theme p {
+    color: #ffffff;
+}
+
+.module-card.dark-theme p {
+    color: #a0aab2;
+}
+
+.module-icon-circle {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: #e0f2fe;
+    /* Tonalidad baja azul/celeste */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.module-icon-circle i {
+    font-size: 28px;
+    color: #0284c7;
+    /* Azul contraste */
+}
+
+/* Fix icon para dark theme */
+.module-card.dark-theme .module-icon-circle {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.module-card.dark-theme .module-icon-circle i {
+    color: #e0f2fe;
+}
+
+.module-card h3 {
+    color: #1e293b;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.module-card p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+    flex-grow: 1;
+    margin-bottom: 25px;
+}
+
+/* Subbotones dentro de la tarjeta */
+.module-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-module {
+    background: #f1f5f9;
+    color: #3b82f6;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-module:hover {
+    background: #e2e8f0;
+    color: #2563eb;
+}
+
+.btn-module.primary {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.btn-module.primary:hover {
+    background: #2563eb;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.module-card.dark-theme .btn-module {
+    background: #3f4345;
+    color: #ffffff;
+}
+
+.module-card.dark-theme .btn-module:hover {
+    background: #4a4f52;
+}
+
+/* Skeleton Loading (Opcional, modernizado) */
+.skeleton-card {
+    width: 100%;
+    height: 250px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 16px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Esconder barra de scroll global pero permitir funcion de scroll */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+/* ---------------------------------
+   MATERIAL DESIGN FORM COMPONENTS (Componentes Reutilizables)
+   --------------------------------- */
+.material-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px 25px;
+    padding: 20px 0;
+}
+
+.material-input-group {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+/* El input y el select base */
+.material-input, .material-select {
+    width: 100%;
+    padding: 22px 14px 10px; /* Padding top mayor para que el label flote encima del texto */
+    font-size: 15px;
+    color: #1e293b;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.material-input:focus, .material-select:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Excepción readOnly */
+.material-input[readonly] {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+/* Floating Label */
+.material-label {
+    position: absolute;
+    top: 17px;
+    left: 14px;
+    font-size: 15px;
+    color: #64748b;
+    transition: all 0.25s ease;
+    pointer-events: none;
+    font-weight: 500;
+}
+
+/* Triggers para flotar el label (Foco o contenido lleno) */
+.material-input:focus ~ .material-label,
+.material-input:not(:placeholder-shown) ~ .material-label,
+.material-select:focus ~ .material-label,
+.material-select:valid ~ .material-label {
+    top: 6px;
+    font-size: 11px;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+/* Arreglo visual nativo (Icono personalizado select) */
+.material-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+.material-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+.material-select-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #64748b;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+.material-select:focus ~ .material-select-icon {
+    color: #3b82f6;
+}
+
+/* ---------------------------------
+   VISTA TABLA PACIENTES
+   --------------------------------- */
+.data-table-container {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.data-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 15px 20px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.data-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.data-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Sombreado de tipo de seguro en la tabla */
+.seguro-badge {
+    padding: 6px 12px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* ---------------------------------
+   RBAC MODIFICADORES DE ESTADO
+   --------------------------------- */
+.hide-for-role {
+    display: none !important;
+}
+
+.blocked-link {
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    filter: grayscale(100%);
+    background: transparent !important;
+    color: #64748b !important;
+    box-shadow: none !important;
+}
+
+.blocked-link:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
