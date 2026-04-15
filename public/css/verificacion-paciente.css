@@ -1,0 +1,165 @@
+/* Módulo Verificación Paciente - Estilos Locales */
+
+.search-filters-container {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.filter-input {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+    border-color: #3b82f6;
+}
+
+.calendar-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-top: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.days-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.day-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.day-card:hover {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.day-card.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.day-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.day-name {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.status-indicator {
+    height: 8px;
+    width: 100%;
+    border-radius: 4px;
+    margin-top: 5px;
+    background: #e2e8f0;
+}
+
+/* Estados Visuales */
+.status-hosp { background: #fef3c7; color: #d97706; border-color: #fcd34d; }
+.status-hosp .status-indicator { background: #d97706; }
+
+.status-alta { background: #dcfce7; color: #15803d; border-color: #86efac; }
+.status-alta .status-indicator { background: #15803d; }
+
+.status-cambio { background: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; }
+.status-cambio .status-indicator { background: #7e22ce; }
+
+.status-selector {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.status-option {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.opt-hosp { background: #fef3c7; color: #d97706; }
+.opt-hosp:hover { border-color: #d97706; }
+
+.opt-alta { background: #dcfce7; color: #15803d; }
+.opt-alta:hover { border-color: #15803d; }
+
+.opt-cambio { background: #f3e8ff; color: #7e22ce; }
+.opt-cambio:hover { border-color: #7e22ce; }
+
+.opt-none { background: #f1f5f9; color: #64748b; }
+.opt-none:hover { border-color: #64748b; }
+
+.patient-info-banner {
+    background: #f8fafc;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #3b82f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.banner-details h4 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 16px;
+}
+
+.banner-details p {
+    margin: 5px 0 0 0;
+    color: #64748b;
+    font-size: 13px;
+}
