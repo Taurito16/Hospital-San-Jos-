@@ -19,8 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sidebarHTML = `
         <div class="sidebar-header">
-            <h2>Hospital San Jos√©</h2>
-            <p>Unidad de Seguros (SIS)</p>
+            <img src="${bp}img/logotipo_transparent.png" alt="Logo MINSA" class="sidebar-logo">
+            <div class="sidebar-header-text">
+                <h2>Hospital San Jos√©</h2>
+                <p>Unidad de Seguros (SIS)</p>
+            </div>
         </div>
         <hr class="sidebar-divider">
         <nav class="sidebar-nav">
@@ -74,46 +77,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
             </div>
         </nav>
+        <div class="sidebar-footer">
+            <button class="logout-btn" id="sidebar-logout-btn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span class="logout-text">Cerrar Sesi√≥n</span>
+            </button>
+        </div>
     `;
 
     const aside = document.createElement('aside');
-    aside.className = 'sidebar';
+    aside.className = 'sidebar collapsible-sidebar';
     aside.innerHTML = sidebarHTML;
 
-    let headerHTML = '';
+    const userEmail = sessionStorage.getItem('userEmail') || '';
 
-    if (currentPage === 'menu.html') {
-        // Cabecera de Inicio Cl√°sica
-        headerHTML = `
-            <div class="header-right">
-                <div class="user-role-badge">
-                    <span id="global-user-role">${rolNombre !== '...' ? rolNombre : 'Cargando...'}</span>
-                </div>
-                <div class="profile-dropdown">
-                    <button class="profile-btn" id="profile-btn">
-                        <i class="fa-solid fa-circle-user profile-icon"></i>
-                    </button>
-                    <div class="dropdown-menu" id="dropdown-menu">
-                        <a href="#"><i class="fa-solid fa-user-pen"></i> Editar Perfil</a>
-                        <a href="#" id="global-logout-btn" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesi√≥n</a>
+    // Cabecera Global Uniforme para TODAS las vistas
+    let headerHTML = `
+        <div class="header-left">
+            <h1 class="welcome-text">Bienvenido</h1>
+        </div>
+        <div class="header-right">
+            <div class="profile-dropdown">
+                <button class="profile-btn" id="profile-btn" style="display: flex; align-items: center; gap: 12px; background: transparent; border: none; cursor: pointer; padding: 5px 10px; border-radius: 8px;">
+                    <i class="fa-solid fa-circle-user profile-icon" style="font-size: 2rem; color: #64748b;"></i>
+                    <div class="user-info-text" style="display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
+                        <span class="user-email" id="global-user-email" style="font-size: 13px; font-weight: 600; color: #1e293b;">${userEmail}</span>
+                        <span class="user-role-soft" id="global-user-role" style="font-size: 12px; color: #64748b;">${rolNombre !== '...' ? rolNombre : 'Cargando...'}</span>
                     </div>
+                </button>
+                <div class="dropdown-menu" id="dropdown-menu" style="right: 10px; top: calc(100% + 10px);">
+                    <a href="#"><i class="fa-solid fa-user-pen"></i> Editar Perfil</a>
+                    <a href="#" id="global-logout-btn" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesi√≥n</a>
                 </div>
             </div>
-        `;
-    } else {
-        // Cabecera Operativa (SPA de Modulos)
-        headerHTML = `
-            <div class="header-left" style="display: flex; flex: 1;">
-                <div class="global-search-box">
-                    <input type="text" placeholder="Buscar registros por DNI..." class="global-search-input">
-                    <button class="global-search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
-                </div>
-            </div>
-            <div class="header-right">
-                <button class="btn-module primary action-btn" id="global-new-patient-btn"><i class="fa-solid fa-plus"></i> Nuevo Paciente</button>
-            </div>
-        `;
-    }
+        </div>
+    `;
 
     const header = document.createElement('header');
     header.className = 'top-header';
@@ -142,30 +140,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const logoutBtn = document.getElementById('global-logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
-            if (client) {
-                await client.auth.signOut();
-                sessionStorage.removeItem('userRole');
-                window.location.href = `${bp}index.html`;
-            }
-        });
-    }
+    const setupLogout = (btnId) => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+                if (client) {
+                    await client.auth.signOut();
+                    sessionStorage.removeItem('userRole');
+                    sessionStorage.removeItem('userEmail');
+                    window.location.href = `${bp}index.html`;
+                }
+            });
+        }
+    };
+
+    setupLogout('global-logout-btn');
+    setupLogout('sidebar-logout-btn');
 
     const loadGlobalRole = async () => {
         const roleSpan = document.getElementById('global-user-role');
+        const emailSpan = document.getElementById('global-user-email');
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : null;
         if (!client) return;
 
         try {
-            if (sessionStorage.getItem('userRole')) return; 
+            if (sessionStorage.getItem('userRole') && sessionStorage.getItem('userEmail')) return; 
 
             const { data: { session } } = await client.auth.getSession();
             if (!session) return;
             const user = session.user;
+            
+            sessionStorage.setItem('userEmail', user.email);
+            if (emailSpan) emailSpan.textContent = user.email;
 
             const { data: profile } = await client.from('perfiles')
                 .select('roles(nombre)')
@@ -186,7 +194,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    if (rolNombre === '...') {
+    if (rolNombre === '...' || !userEmail) {
         loadGlobalRole();
+    }
+});
+
+
+// OFFLINE HANDLING
+window.addEventListener('offline', () => {
+    const offlineDiv = document.createElement('div');
+    offlineDiv.id = 'global-offline-banner';
+    offlineDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; background: #ef4444; color: white; text-align: center; padding: 10px; font-weight: 600; z-index: 9999; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 14px;';
+    offlineDiv.innerHTML = '<i class="fa-solid fa-wifi" style="margin-right: 8px;"></i> Est·s sin conexiÛn a internet. Los cambios no se guardar·n.';
+    document.body.appendChild(offlineDiv);
+});
+
+window.addEventListener('online', () => {
+    const offlineDiv = document.getElementById('global-offline-banner');
+    if(offlineDiv) {
+        offlineDiv.style.background = '#22c55e';
+        offlineDiv.innerHTML = '<i class="fa-solid fa-check" style="margin-right: 8px;"></i> ConexiÛn restaurada!';
+        setTimeout(() => offlineDiv.remove(), 3000);
     }
 });

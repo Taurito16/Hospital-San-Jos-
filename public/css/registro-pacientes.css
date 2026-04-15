@@ -1,0 +1,243 @@
+﻿/* MÃ³dulo Registro Pacientes - Estilos Locales */
+
+.module-commands {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .module-commands {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .global-search-box {
+        width: 100% !important;
+    }
+}
+
+/* TABLA */
+.data-table-container {
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* FORMULARIO: FRANJA AZUL SUPERIOR */
+.blue-toptag-form {
+    border-top: 5px solid #3b82f6 !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.standard-form-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* ESTILIZACION TABLA DATOS */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.data-table tbody td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.seguro-badge {
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.condicion-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.cond-hospitalizado { background: #fef3c7; color: #d97706; }
+.cond-alta { background: #dcfce7; color: #15803d; }
+.cond-fallecido { background: #fee2e2; color: #b91c1c; }
+.cond-cambio { background: #f3e8ff; color: #7e22ce; }
+
+/* TOAST SUPERIOR */
+#toast {
+    position: fixed;
+    bottom: 30px; top: auto;
+    right: -300px;
+    background: #10b981;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    z-index: 9999;
+    transition: right 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    font-weight: 500;
+}
+#toast.show {
+    right: 20px;
+}
+
+
+/* MODERN SELECTS & DATE PICKERS */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+
+input[type="date"] {
+    position: relative;
+    padding-right: 35px !important; 
+    color: #0f172a !important;
+}
+
+input[type="date"]::after {
+    content: '\f133';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3b82f6; /* Blue palette */
+    pointer-events: none;
+}
+
+/* Fix generic select visually */
+select.material-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 35px !important;
+    color: #0f172a;
+    background-color: transparent !important;
+}
+.material-select-wrapper {
+    position: relative;
+}
+.material-select-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3b82f6;
+    pointer-events: none;
+}
+.material-select option {
+    color: #0f172a;
+    padding: 10px;
+}
+
+/* Active Material Inputs Coloring */
+.material-input:focus, .material-select:focus {
+    border-bottom: 2px solid #3b82f6 !important;
+}
+.material-input:focus ~ .material-label, 
+.material-select:focus ~ .material-label,
+.material-input:not(:placeholder-shown) ~ .material-label,
+.material-select:valid ~ .material-label {
+    color: #3b82f6 !important;
+}
+
+
+
+.standard-input:disabled { background-color: #f1f5f9 !important; color: #64748b !important; border-color: #cbd5e1 !important; cursor: not-allowed; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+
+/* Acciones en tabla */
+.action-btn-edit {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.action-btn-edit:hover {
+    color: #3b82f6;
+}
+.data-table thead th, .data-table tbody td {
+    font-size: 13px;
+    padding: 12px 15px;
+}
+/* CLASSIC FORMS (STACKED LABELS) */
+.input-stacked {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+.input-stacked label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+}
+.standard-input {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #0f172a;
+    outline: none;
+    transition: all 0.2s;
+    width: 100%;
+}
+.standard-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.standard-input:disabled { background-color: #f1f5f9 !important; color: #64748b !important; border-color: #cbd5e1 !important; cursor: not-allowed; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+.col-span-6 { grid-column: span 6; }
+
+#registro-form {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0 25px;
+    align-items: start;
+}

@@ -6,352 +6,164 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Pacientes - Hospital San José</title>
     <link rel="stylesheet" href="../../css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="../../css/registro-pacientes.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <style>
-        .standard-form-container {
-            background: #ffffff;
-            box-shadow: none;
-            padding: 20px;
-            max-width: 1200px;
-            margin-top: 0;
-        }
-
-        .material-input,
-        .material-select {
-            background: #ffffff !important;
-        }
-
-        .pagination-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .pagination-btn {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #475569;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .pagination-btn:hover:not(:disabled) {
-            background: #f1f5f9;
-            color: #3b82f6;
-        }
-
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination-info {
-            font-size: 14px;
-            color: #64748b;
-        }
-
-        .toast-success {
-            position: fixed;
-            bottom: -100px;
-            right: 30px;
-            background: #10b981;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 9999;
-        }
-
-        .toast-success.show {
-            bottom: 30px;
-        }
-
-        body {
-            margin: 0;
-        }
-
-        .main-wrapper {
-            padding-top: 0;
-        }
-
-        .page-content {
-            margin-top: 0;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
     <div class="main-wrapper">
         <main class="page-content" id="page-content">
 
-            <div id="view-lista">
+            <!-- BARRA DE OPERACIONES ESPECÍFICA DEL MÓDULO -->
+            <div class="module-commands">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="global-search-box" style="width: 320px; display: flex; align-items: center; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; padding: 0 15px;">
+                        <i class="fa-solid fa-magnifying-glass" style="color: #64748b;"></i>
+                        <input type="text" id="btn-search-dni" placeholder="Buscar registros por DNI..." class="global-search-input" style="border: none; padding: 12px 10px; outline: none; flex: 1; min-width: 0;">
+                        <button id="execute-search" style="display: none;"></button>
+                    </div>
+                    <button class="btn-module" id="clear-search" style="display: none; background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; padding: 8px 15px;">Limpiar</button>
+                </div>
+                <button class="btn-module primary action-btn" id="local-new-patient-btn" style="padding: 12px 20px;"><i class="fa-solid fa-plus"></i> Nuevo Paciente</button>
+            </div>
+
+            <!-- LISTA DE PACIENTES -->
+            <div id="view-lista" style="margin-top: 20px;">
                 <div class="data-table-container">
-                    <table class="data-table">
+                    <!-- LOADING SPINNER -->
+                    <div id="loading-indicator" style="display: none; text-align: center; padding: 40px; color: #3b82f6;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem;"></i>
+                        <p style="margin-top: 10px; font-weight: 500;">Cargando pacientes...</p>
+                    </div>
+
+                    <table class="data-table" id="table-element">
                         <thead>
                             <tr>
                                 <th>DNI</th>
                                 <th>Paciente</th>
                                 <th>Nº Historia</th>
+                                <th>Fecha Nacim.</th>
                                 <th>Tipo de Seguro</th>
-                                <th style="text-align: right;">Acciones</th>
+                                <th>Código Ver.</th>
+                                <th>Servicio</th>
+                                <th>Condición</th>
+                                <th style="text-align: center; width: 60px;">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tabla-pacientes"></tbody>
+                        <tbody id="tabla-pacientes">
+                            <!-- Los registros se generan en JS -->
+                        </tbody>
                     </table>
                 </div>
                 <div id="pagination-container" class="pagination-controls"></div>
             </div>
 
-            <div id="view-form" style="display: none;">
-                <div class="standard-form-container">
-                    <h3
-                        style="margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; color: #0f172a; font-size: 24px; font-weight: 700;">
+            <!-- FORMULARIO -->
+            <div id="view-form" style="display: none; margin-top: 20px;">
+                <div class="standard-form-container blue-toptag-form">
+                    <h3 style="margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; color: #0f172a; font-size: 20px; font-weight: 700;">
                         Datos del Nuevo Paciente
                     </h3>
 
-                    <form id="registro-form" class="material-form">
-
-                        <div class="material-input-group">
-                            <input type="text" id="paciente-dni" class="material-input" placeholder=" " maxlength="8"
-                                required>
-                            <label class="material-label">DNI del Paciente</label>
+                    <form id="registro-form">
+                        <input type="hidden" id="paciente-id">
+                        
+                        <div class="input-stacked col-span-2">
+                            <label>DNI del Paciente</label>
+                            <input type="text" id="paciente-dni" class="standard-input" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
 
-                        <div class="material-input-group">
-                            <input type="text" id="paciente-hc" class="material-input hc-input" placeholder=" "
-                                required>
-                            <label class="material-label">Nº Historia Clínica</label>
+                        <div class="input-stacked col-span-2">
+                            <label>Nº Historia Clínica</label>
+                            <input type="text" id="paciente-hc" class="standard-input hc-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                         </div>
 
-                        <div class="material-input-group">
-                            <input type="text" id="paciente-apellidos" class="material-input" placeholder=" " required>
-                            <label class="material-label">Apellidos Completos</label>
+                        <!-- FECHA NACIMIENTO -->
+                        <div class="input-stacked col-span-2">
+                            <label>Fecha de Nacimiento</label>
+                            <input type="date" id="paciente-fecha-nac" class="standard-input" required>
                         </div>
 
-                        <div class="material-input-group">
-                            <input type="text" id="paciente-nombres" class="material-input" placeholder=" " required>
-                            <label class="material-label">Nombres Completos</label>
+                        <div class="input-stacked col-span-3">
+                            <label>Apellidos Completos</label>
+                            <input type="text" id="paciente-apellidos" class="standard-input" oninput="this.value = this.value.replace(/[^A-Za-zñÑáéíóúÁÉÍÓÚ\s]/g, '')" required>
                         </div>
 
-                        <div class="material-input-group">
-                            <div class="material-select-wrapper">
-                                <select id="paciente-seguro" class="material-select" required>
-                                    <option value="" disabled selected hidden></option>
+                        <div class="input-stacked col-span-3">
+                            <label>Nombres Completos</label>
+                            <input type="text" id="paciente-nombres" class="standard-input" oninput="this.value = this.value.replace(/[^A-Za-zñÑáéíóúÁÉÍÓÚ\s]/g, '')" required>
+                        </div>
+
+                        <div class="input-stacked col-span-2">
+                            <label>Tipo de Seguro</label>
+                            <div class="standard-select-wrapper">
+                                <select id="paciente-seguro" class="standard-input" required>
+                                    <option value="" disabled selected hidden>Seleccione</option>
                                     <option value="EsSalud">EsSalud</option>
                                     <option value="SIS">SIS</option>
                                     <option value="Saludpol">Saludpol</option>
                                     <option value="SOAT">SOAT</option>
-                                    <option value="Otros">Otros tipos (Especificar)</option>
+                                    <option value="Privado">Privado</option>
+                                    <option value="Otros">Otros tipos</option>
                                 </select>
-                                <label class="material-label">Tipo de Seguro</label>
-                                <i class="fa-solid fa-chevron-down material-select-icon"></i>
                             </div>
                         </div>
 
-                        <div class="material-input-group" id="grupo-otros" style="display: none;">
-                            <input type="text" id="paciente-seguro-otros" class="material-input" placeholder=" ">
-                            <label class="material-label">Especificar Seguro</label>
+                        <div class="input-stacked col-span-6" id="grupo-otros" style="display: none;">
+                            <label>Especificar Seguro</label>
+                            <input type="text" id="paciente-seguro-otros" class="standard-input">
                         </div>
 
-                        <div class="form-actions"
-                            style="grid-column: 1 / -1; display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-                            <button type="button" class="btn-module" id="btn-cancelar"
-                                style="background: #f1f5f9; color: #64748b; padding: 12px 25px;">Cancelar</button>
+                        <!-- CÓDIGO VERIFICACIÓN -->
+                        <div class="input-stacked col-span-2">
+                            <label>Código de Verificación</label>
+                            <input type="text" id="paciente-codigo-ver" class="standard-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
 
-                            <button type="submit" class="btn-module primary" id="btn-guardar"
-                                style="padding: 12px 25px;">
-                                <i class="fa-solid fa-save"></i> Guardar Registro
+                        <!-- SERVICIO -->
+                        <div class="input-stacked col-span-2">
+                            <label>Servicio</label>
+                            <input type="text" id="paciente-servicio" class="standard-input" oninput="this.value = this.value.replace(/[^A-Za-zñÑáéíóúÁÉÍÓÚ\s]/g, '')">
+                        </div>
+
+                        <!-- CONDICIÓN -->
+                        <div class="input-stacked col-span-6">
+                            <label>Condición Actual</label>
+                            <div class="standard-select-wrapper">
+                                <select id="paciente-condicion" class="standard-input" required>
+                                    <option value="" disabled selected hidden>Seleccione</option>
+                                    <option value="Hospitalizado">Hospitalizado</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Fallecido">Fallecido</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-actions" style="grid-column: 1 / -1; display: flex; gap: 15px; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                            <button type="button" class="btn-module" id="btn-cancelar" style="background: #f1f5f9; color: #64748b; padding: 12px 25px;">Cancelar</button>
+                            <button type="submit" class="btn-module primary" id="btn-guardar" style="padding: 12px 25px;">
+                                <i class="fa-solid fa-save"></i> 
+                                <span id="guardar-text">Guardar Registro</span>
+                                <i id="guardar-spinner" class="fa-solid fa-circle-notch fa-spin" style="display:none; margin-left:8px;"></i>
                             </button>
                         </div>
-
                     </form>
                 </div>
             </div>
 
-            <div id="toast" class="toast-success">
-                <i class="fa-solid fa-circle-check"></i>
-                <span>Paciente Guardado Exitosamente</span>
+            <!-- Notificación Toast -->
+            <div id="toast" class="toast-success" style="display: none;">
+                <i class="fa-solid fa-check-circle" id="toast-icon"></i>
+                <span id="toast-text">Paciente Guardado Exitosamente</span>
             </div>
 
         </main>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="../../js/supabase-config.js"></script>
     <script src="../../js/layout.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) window.location.href = '../../index.html';
-
-            const viewLista = document.getElementById('view-lista');
-            const viewForm = document.getElementById('view-form');
-            const selectSeguro = document.getElementById('paciente-seguro');
-            const grupoOtros = document.getElementById('grupo-otros');
-            const inputOtros = document.getElementById('paciente-seguro-otros');
-            const form = document.getElementById('registro-form');
-            const btnCancelar = document.getElementById('btn-cancelar');
-            const toast = document.getElementById('toast');
-
-            let currentPage = 1;
-            let rowsPerPage = 5;
-
-            let mockData = [
-                { dni: '72145698', n: 'Pérez Gómez, Juan', hc: 'HC-2023-001', s: 'SIS' },
-                { dni: '45896321', n: 'Díaz Torres, María', hc: 'HC-2023-002', s: 'EsSalud' },
-                { dni: '85214796', n: 'Vargas Silva, Luis', hc: 'HC-2023-003', s: 'SOAT' },
-                { dni: '96325874', n: 'Rojas Peña, Ana', hc: 'HC-2023-004', s: 'Saludpol' },
-                { dni: '14785236', n: 'Cruz Sánchez, Pedro', hc: 'HC-2023-005', s: 'SIS' },
-                { dni: '45612378', n: 'López Gómez, Sara', hc: 'HC-2023-006', s: 'Privado' },
-                { dni: '85236974', n: 'Ramírez Luna, José', hc: 'HC-2023-007', s: 'SIS' }
-            ];
-
-            const renderTable = () => {
-                const availableHeight = window.innerHeight - 300;
-                let calculatedRows = Math.floor(availableHeight / 52);
-                rowsPerPage = calculatedRows > 2 ? calculatedRows : 3;
-
-                const tbody = document.getElementById('tabla-pacientes');
-                tbody.innerHTML = '';
-
-                const start = (currentPage - 1) * rowsPerPage;
-                const end = start + rowsPerPage;
-
-                const paginatedItems = mockData.slice(start, end);
-
-                paginatedItems.forEach(item => {
-                    tbody.innerHTML += `
-                    <tr>
-                        <td>${item.dni}</td>
-                        <td>${item.n}</td>
-                        <td>${item.hc}</td>
-                        <td><span class="seguro-badge">${item.s}</span></td>
-                        <td style="text-align: right;">
-                            <button class="btn-module" style="padding: 6px 12px; font-size: 13px; display: inline-flex;">
-                                <i class="fa-solid fa-pen" style="color:#000;"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-
-                renderPagination();
-            };
-
-            const renderPagination = () => {
-                const totalPages = Math.ceil(mockData.length / rowsPerPage);
-                const container = document.getElementById('pagination-container');
-                container.innerHTML = '';
-
-                if (totalPages <= 1) return;
-
-                const btnPrev = document.createElement('button');
-                btnPrev.className = 'pagination-btn';
-                btnPrev.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
-                btnPrev.disabled = currentPage === 1;
-                btnPrev.onclick = () => { currentPage--; renderTable(); };
-                container.appendChild(btnPrev);
-
-                const info = document.createElement('span');
-                info.className = 'pagination-info';
-                info.innerText = `Página ${currentPage} de ${totalPages}`;
-                container.appendChild(info);
-
-                const btnNext = document.createElement('button');
-                btnNext.className = 'pagination-btn';
-                btnNext.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
-                btnNext.disabled = currentPage === totalPages;
-                btnNext.onclick = () => { currentPage++; renderTable(); };
-                container.appendChild(btnNext);
-            };
-
-            window.addEventListener('resize', () => {
-                const oldRows = rowsPerPage;
-                renderTable();
-                if (rowsPerPage !== oldRows) {
-                    currentPage = 1;
-                    renderTable();
-                }
-            });
-
-            setTimeout(renderTable, 100);
-
-            const toggleGlobalHeader = (show) => {
-                const headerLeft = document.querySelector('.header-left');
-                const btnNew = document.getElementById('global-new-patient-btn');
-                if (headerLeft) headerLeft.style.display = show ? 'flex' : 'none';
-                if (btnNew) btnNew.style.display = show ? 'flex' : 'none';
-            };
-
-            document.addEventListener('click', (e) => {
-                const newBtn = e.target.closest('#global-new-patient-btn');
-                if (newBtn) {
-                    viewLista.style.display = 'none';
-                    viewForm.style.display = 'block';
-                    form.reset();
-                    grupoOtros.style.display = 'none';
-                    inputOtros.required = false;
-                    toggleGlobalHeader(false);
-                }
-            });
-
-            btnCancelar.addEventListener('click', () => {
-                viewForm.style.display = 'none';
-                viewLista.style.display = 'block';
-                toggleGlobalHeader(true);
-            });
-
-            selectSeguro.addEventListener('change', (e) => {
-                if (e.target.value === 'Otros') {
-                    grupoOtros.style.display = 'block';
-                    inputOtros.required = true;
-                } else {
-                    grupoOtros.style.display = 'none';
-                    inputOtros.required = false;
-                }
-            });
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-
-                const dni = document.getElementById('paciente-dni').value;
-                const nombres = document.getElementById('paciente-nombres').value;
-                const apellidos = document.getElementById('paciente-apellidos').value;
-                const hc = document.getElementById('paciente-hc').value;
-
-                let seguro = selectSeguro.value;
-                if (seguro === 'Otros') seguro = inputOtros.value;
-
-                mockData.unshift({
-                    dni: dni,
-                    n: `${apellidos}, ${nombres}`,
-                    hc: hc,
-                    s: seguro
-                });
-
-                currentPage = 1;
-                renderTable();
-
-                viewForm.style.display = 'none';
-                viewLista.style.display = 'block';
-                toggleGlobalHeader(true);
-
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
-            });
-        });
-    </script>
+    <script src="../../js/registro-pacientes.js"></script>
 </body>
-
 </html>
