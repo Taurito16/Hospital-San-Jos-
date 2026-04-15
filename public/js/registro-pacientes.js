@@ -32,11 +32,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadingIndicator = document.getElementById('loading-indicator');
     const tableElement = document.getElementById('table-element');
     
+    // Referencias para el filtro de Servicio
+    const filterServicio = document.getElementById('filter-servicio');
+    const btnClearFilterServicio = document.getElementById('clear-filter-servicio');
+    const inputDni = document.getElementById('paciente-dni');
+    
     // Variables de Paginación Inteligente y DB
     let currentPage = 1;
     let rowsPerPage = 5; 
     let totalRecords = 0;
     let searchQuery = '';
+    let filterQuery = ''; // Variable para almacenar el filtro de Servicio
+
+    // ============================================
+    // CARGA DINÁMICA DE SERVICIOS
+    // ============================================
+    const loadServicios = async () => {
+        try {
+            const { data, error } = await client
+                .from('pacientes')
+                .select('servicio')
+                .not('servicio', 'is', null)
+                .order('servicio', { ascending: true });
+
+            if (error) throw error;
+
+            // Eliminar duplicados
+            const servicios = [...new Set(data.map(p => p.servicio).filter(s => s && s.trim()))];
+
+            // Limpiar opciones previas (excepto la primera)
+            while (filterServicio.options.length > 1) {
+                filterServicio.remove(1);
+            }
+
+            // Agregar opciones dinámicamente
+            servicios.forEach(servicio => {
+                const option = document.createElement('option');
+                option.value = servicio;
+                option.textContent = servicio;
+                filterServicio.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error cargando servicios:', error.message);
+        }
+    };
 
     // ============================================
     // CARGA DE DATOS LOCALES VS SERVIDOR (PAGINACIÓN)
@@ -62,6 +101,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (searchQuery) {
                 queryObj = queryObj.eq('dni', searchQuery);
+            }
+
+            if (filterQuery) {
+                queryObj = queryObj.eq('servicio', filterQuery);
             }
 
             const { data, count, error } = await queryObj;
@@ -232,6 +275,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadPacientes();
     });
 
+    // ============================================
+    // FILTRO POR SERVICIO
+    // ============================================
+    filterServicio.addEventListener('change', (e) => {
+        const val = e.target.value.trim();
+        if (val) {
+            filterQuery = val;
+            currentPage = 1;
+            btnClearFilterServicio.style.display = 'block';
+            loadPacientes();
+        } else {
+            filterQuery = '';
+            btnClearFilterServicio.style.display = 'none';
+            currentPage = 1;
+            loadPacientes();
+        }
+    });
+
+    btnClearFilterServicio.addEventListener('click', () => {
+        filterQuery = '';
+        filterServicio.value = '';
+        btnClearFilterServicio.style.display = 'none';
+        currentPage = 1;
+        loadPacientes();
+    });
+
+    // ============================================
+    // VALIDACIÓN DE DNI (8 DÍGITOS OBLIGATORIOS)
+    // ============================================
+    inputDni.addEventListener('blur', () => {
+        const dniValue = inputDni.value.trim();
+        if (dniValue && dniValue.length !== 8) {
+            inputDni.setCustomValidity('El DNI debe contener exactamente 8 dígitos numéricos');
+        } else {
+            inputDni.setCustomValidity('');
+        }
+    });
+
+    inputDni.addEventListener('input', () => {
+        if (inputDni.value.length === 8) {
+            inputDni.setCustomValidity('');
+        }
+    });
+
     btnNew.addEventListener('click', () => {
         viewLista.style.display = 'none';
         moduleCommands.style.display = 'none'; // Ocultar módulos operativos locales
@@ -270,6 +357,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        // Validación de DNI antes de enviar
+        const dniValue = document.getElementById('paciente-dni').value.trim();
+        if (dniValue && dniValue.length !== 8) {
+            document.getElementById('toast-text').textContent = 'El DNI debe contener exactamente 8 dígitos numéricos';
+            toast.style.display = 'flex';
+            toast.style.background = '#ef4444'; // Rojo error
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.style.display = 'none', 400);
+            }, 3500);
+            return;
+        }
+        
         // Estado visual: Bloquear botón y mostrar spinner
         btnGuardar.disabled = true;
         textGuardar.textContent = 'Guardando...';
@@ -282,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             seguro_otros: selectSeguro.value === 'Otros' ? inputOtros.value.trim() : null,
             servicio: document.getElementById('paciente-servicio').value.trim() || null,
             condicion: document.getElementById('paciente-condicion').value,
-            creado_por: userId // Supabase might not update this if the RLS allows update on same created_by
+            creado_por: userId // Supabase migh
         };
 
         // If newly inserted
@@ -315,6 +416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Éxito:
             currentPage = 1;
             await loadPacientes();
+            await loadServicios(); // Recargar servicios por si hay nuevos
 
             viewForm.style.display = 'none';
             viewLista.style.display = 'block';
@@ -348,5 +450,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Carga inicial
+    loadServicios();
     loadPacientes();
 });

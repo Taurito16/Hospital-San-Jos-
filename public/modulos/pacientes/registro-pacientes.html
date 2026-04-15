@@ -24,6 +24,14 @@
                         <button id="execute-search" style="display: none;"></button>
                     </div>
                     <button class="btn-module" id="clear-search" style="display: none; background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; padding: 8px 15px;">Limpiar</button>
+                    
+                    <!-- FILTRO POR SERVICIO -->
+                    <div style="display: flex; align-items: center; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <select id="filter-servicio" style="padding: 10px 15px; border: none; outline: none; border-radius: 8px; background: #ffffff; cursor: pointer; min-width: 200px;">
+                            <option value="">Filtrar por Servicio...</option>
+                        </select>
+                    </div>
+                    <button class="btn-module" id="clear-filter-servicio" style="display: none; background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; padding: 8px 15px;">Limpiar Filtro</button>
                 </div>
                 <button class="btn-module primary action-btn" id="local-new-patient-btn" style="padding: 12px 20px;"><i class="fa-solid fa-plus"></i> Nuevo Paciente</button>
             </div>
@@ -71,7 +79,7 @@
                         
                         <div class="input-stacked col-span-2">
                             <label>DNI del Paciente</label>
-                            <input type="text" id="paciente-dni" class="standard-input" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                            <input type="text" id="paciente-dni" class="standard-input" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')" pattern="[0-9]{8}" title="El DNI debe contener exactamente 8 dígitos numéricos" required>
                         </div>
 
                         <div class="input-stacked col-span-2">
