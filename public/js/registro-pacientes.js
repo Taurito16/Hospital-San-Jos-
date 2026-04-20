@@ -55,24 +55,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     const loadServicios = async () => {
         try {
-            const { data, error } = await client
-                .from('pacientes')
-                .select('servicio')
-                .not('servicio', 'is', null)
-                .order('servicio', { ascending: true });
-
-            if (error) throw error;
-
-            // Eliminar duplicados
-            const servicios = [...new Set(data.map(p => p.servicio).filter(s => s && s.trim()))];
+            const predefinedServicios = [
+                "Shock trauma", "Salud mental", "UVI", "Medicina", 
+                "Cirugía", "Pediatría", "Neonatología", "Ginecología", "Puerperio"
+            ];
 
             // Limpiar opciones previas (excepto la primera)
             while (filterServicio.options.length > 1) {
                 filterServicio.remove(1);
             }
 
-            // Agregar opciones dinámicamente
-            servicios.forEach(servicio => {
+            // Agregar opciones predefinidas
+            predefinedServicios.forEach(servicio => {
                 const option = document.createElement('option');
                 option.value = servicio;
                 option.textContent = servicio;
@@ -409,8 +403,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 errorResp = error;
                 document.getElementById('toast-text').textContent = 'Paciente Actualizado Exitosamente';
             } else {
-                const { error } = await client.from('pacientes').insert([payload]);
+                const { data: newPatient, error } = await client.from('pacientes').insert([payload]).select().single();
                 errorResp = error;
+                
+                if (!error && newPatient && payload.condicion === 'Hospitalizado') {
+                    // Crear evento automático de Hospitalizado
+                    await client.from('historial_eventos').insert([{
+                        paciente_id: newPatient.id,
+                        tipo_evento: 'Hospitalizado',
+                        detalle: `Ingreso inicial al servicio de ${payload.servicio}`,
+                        registrado_por: userId
+                    }]);
+                }
+                
                 document.getElementById('toast-text').textContent = 'Paciente Guardado Exitosamente';
             }
             
@@ -422,7 +427,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Éxito:
             currentPage = 1;
             await loadPacientes();
-            await loadServicios(); // Recargar servicios por si hay nuevos
 
             viewForm.style.display = 'none';
             viewLista.style.display = 'block';

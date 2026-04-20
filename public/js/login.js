@@ -63,14 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data: profile } = await supabaseClient
                 .from('perfiles')
-                .select('roles(nombre)')
+                .select('nombre_completo, roles(nombre)')
                 .eq('id_usuario', authData.user.id)
                 .single();
 
-            if (profile && profile.roles) {
-                sessionStorage.setItem('userRole', profile.roles.nombre);
+            if (profile) {
+                sessionStorage.setItem('userRole', profile.roles ? profile.roles.nombre : 'Usuario');
+                sessionStorage.setItem('userName', profile.nombre_completo || authData.user.email);
             } else {
                 sessionStorage.setItem('userRole', 'Usuario');
+                sessionStorage.setItem('userName', authData.user.email);
             }
 
             if (remember.checked) {

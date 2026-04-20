@@ -53,6 +53,31 @@
                 <div id="pagination-container" class="pagination-controls"></div>
             </div>
 
+            <!-- SECCION DE HISTORIAL (MISMA PAGINA) -->
+            <div id="view-history-inline" style="display: none; margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 id="history-patient-name" style="font-weight: 800; color: #0f172a;">HISTORIAL CLÍNICO</h3>
+                    <button class="btn-module" id="btn-close-history" style="background: #f1f5f9; color: #64748b;"><i class="fa-solid fa-xmark"></i> Cerrar Historial</button>
+                </div>
+
+                <!-- KPIs -->
+                <div id="history-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <!-- Cargado por JS -->
+                </div>
+
+                <!-- Botones de Registros -->
+                <div id="history-records-buttons" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <!-- Cargado por JS -->
+                </div>
+
+                <!-- Timeline renderizada aquí -->
+                <div class="timeline-section" style="background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0;">
+                    <div id="history-timeline-container" class="timeline-container">
+                        <!-- Cargado por JS -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Toast -->
             <div id="toast" class="toast-success" style="display: none;">
                 <i class="fa-solid fa-check-circle" id="toast-icon"></i>

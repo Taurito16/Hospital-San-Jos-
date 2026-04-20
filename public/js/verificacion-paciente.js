@@ -41,6 +41,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const eventoNuevoSeguroOtros = document.getElementById('evento-nuevo-seguro-otros');
     const grupoNuevoSeguro = document.getElementById('grupo-nuevo-seguro');
     const grupoNuevoSeguroOtros = document.getElementById('grupo-nuevo-seguro-otros');
+    
+    const grupoServicioDe = document.getElementById('grupo-servicio-de');
+    const grupoServicioHacia = document.getElementById('grupo-servicio-hacia');
+    const eventoServicioDe = document.getElementById('evento-servicio-de');
+    const eventoServicioHacia = document.getElementById('evento-servicio-hacia');
+
     const btnRegistrar = document.getElementById('btn-registrar-evento');
     const registrarText = document.getElementById('registrar-text');
     const registrarSpinner = document.getElementById('registrar-spinner');
@@ -163,6 +169,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         eventForm.reset();
         grupoNuevoSeguro.style.display = 'none';
         grupoNuevoSeguroOtros.style.display = 'none';
+        grupoServicioDe.style.display = 'none';
+        grupoServicioHacia.style.display = 'none';
+
+        // Validacion Fallecido
+        if (patient.condicion === 'Fallecido') {
+            btnRegistrar.disabled = true;
+            registrarText.textContent = 'Registro bloqueado (Fallecido)';
+            eventoTipo.disabled = true;
+            eventoDetalle.disabled = true;
+        } else {
+            btnRegistrar.disabled = false;
+            registrarText.textContent = 'Registrar Evento';
+            eventoTipo.disabled = false;
+            eventoDetalle.disabled = false;
+        }
 
         await loadTimeline();
     };
@@ -212,6 +233,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (ev.tipo_evento === 'Cambio Cobertura' && ev.nuevo_seguro) {
                 detalleHTML += '<p class="timeline-detail" style="font-style: italic;">Nuevo seguro: <strong>' + ev.nuevo_seguro + '</strong>' + (ev.nuevo_seguro_otros ? ' (' + ev.nuevo_seguro_otros + ')' : '') + '</p>';
             }
+            
+            if (ev.tipo_evento === 'Cambio de Servicio' && ev.servicio_de && ev.servicio_hacia) {
+                detalleHTML += '<p class="timeline-detail" style="font-style: italic;">Traslado: <strong>' + ev.servicio_de + '</strong> \u2192 <strong>' + ev.servicio_hacia + '</strong></p>';
+            }
 
             eventEl.innerHTML = `
                 <div class="timeline-dot ${dotClass}">
@@ -231,7 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getEventDotClass = (tipo) => {
         if (tipo === 'Hospitalizado') return 'dot-hospitalizado';
-        if (tipo === 'Cambio Cobertura') return 'dot-cambio';
+        if (tipo === 'Cambio Cobertura' || tipo === 'Cambio de Servicio') return 'dot-cambio';
         if (tipo === 'Alta') return 'dot-alta';
         if (tipo === 'Fallecido') return 'dot-fallecido';
         return '';
@@ -240,27 +265,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const getEventIcon = (tipo) => {
         if (tipo === 'Hospitalizado') return 'fa-solid fa-bed';
         if (tipo === 'Cambio Cobertura') return 'fa-solid fa-shield-halved';
+        if (tipo === 'Cambio de Servicio') return 'fa-solid fa-right-left';
         if (tipo === 'Alta') return 'fa-solid fa-house-medical-circle-check';
         if (tipo === 'Fallecido') return 'fa-solid fa-heart-crack';
         return 'fa-solid fa-circle';
     };
 
     const updateBannerStats = (eventos) => {
-        // Refrescar condicion del paciente desde BD
-        // Calcular dias
         let ultimoIngreso = null;
         let ultimaAlta = null;
+        let ultimoCambioServicio = null;
 
-        for (let i = eventos.length - 1; i >= 0; i--) {
-            const ev = eventos[i];
-            if ((ev.tipo_evento === 'Alta' || ev.tipo_evento === 'Fallecido') && !ultimaAlta) {
-                ultimaAlta = new Date(ev.fecha_evento);
-            }
+        const eventosOrdenados = [...eventos].sort((a, b) => new Date(a.fecha_evento) - new Date(b.fecha_evento));
+
+        eventosOrdenados.forEach(ev => {
             if (ev.tipo_evento === 'Hospitalizado') {
                 ultimoIngreso = new Date(ev.fecha_evento);
-                break;
+                ultimoCambioServicio = null; // Reset CS on new hospitalization
+            } else if (ev.tipo_evento === 'Alta' || ev.tipo_evento === 'Fallecido') {
+                ultimaAlta = new Date(ev.fecha_evento);
+            } else if (ev.tipo_evento === 'Cambio de Servicio') {
+                ultimoCambioServicio = new Date(ev.fecha_evento);
             }
-        }
+        });
 
         const condicion = selectedPatient.condicion;
         let diasTexto = 'Sin registro';
@@ -271,6 +298,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dias = Math.max(0, Math.ceil((fin - ultimoIngreso) / (1000 * 60 * 60 * 24)));
             diasTexto = dias + (dias === 1 ? ' d\u00EDa' : ' d\u00EDas');
             diasClase = condicion === 'Hospitalizado' ? 'dias-activo' : 'dias-alta';
+            
+            // Adicion: Contador desde Cambio de Servicio
+            if (ultimoCambioServicio) {
+                const diasCS = Math.max(0, Math.ceil((fin - ultimoCambioServicio) / (1000 * 60 * 60 * 24)));
+                diasTexto += ` | CS: ${diasCS} d\u00EDas`;
+            }
         }
 
         bannerDias.textContent = diasTexto;
@@ -283,12 +316,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     // MOSTRAR/OCULTAR CAMPOS DE CAMBIO COBERTURA
     // ============================================
     eventoTipo.addEventListener('change', (e) => {
-        if (e.target.value === 'Cambio Cobertura') {
-            grupoNuevoSeguro.style.display = 'block';
-        } else {
-            grupoNuevoSeguro.style.display = 'none';
-            grupoNuevoSeguroOtros.style.display = 'none';
+        const val = e.target.value;
+        grupoNuevoSeguro.style.display = val === 'Cambio Cobertura' ? 'block' : 'none';
+        grupoNuevoSeguroOtros.style.display = 'none';
+        
+        grupoServicioDe.style.display = val === 'Cambio de Servicio' ? 'block' : 'none';
+        grupoServicioHacia.style.display = val === 'Cambio de Servicio' ? 'block' : 'none';
+        
+        if (val === 'Cambio de Servicio' && selectedPatient) {
+            eventoServicioDe.value = selectedPatient.servicio || '';
         }
+    });
+
+    eventoServicioDe.addEventListener('change', () => {
+        const valDe = eventoServicioDe.value;
+        Array.from(eventoServicioHacia.options).forEach(opt => {
+            opt.disabled = opt.value === valDe && valDe !== "";
+        });
+    });
+
+    eventoServicioHacia.addEventListener('change', () => {
+        const valHacia = eventoServicioHacia.value;
+        Array.from(eventoServicioDe.options).forEach(opt => {
+            opt.disabled = opt.value === valHacia && valHacia !== "";
+        });
     });
 
     eventoNuevoSeguro.addEventListener('change', (e) => {
@@ -316,6 +367,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast('Seleccione el nuevo tipo de seguro', '#ef4444');
             return;
         }
+        
+        if (tipo === 'Cambio de Servicio') {
+            if (!eventoServicioDe.value || !eventoServicioHacia.value) {
+                showToast('Seleccione ambos servicios (De / Hacia)', '#ef4444');
+                return;
+            }
+            if (eventoServicioDe.value === eventoServicioHacia.value) {
+                showToast('El servicio de destino debe ser diferente al de origen', '#ef4444');
+                return;
+            }
+        }
 
         btnRegistrar.disabled = true;
         registrarText.textContent = 'Registrando...';
@@ -332,6 +394,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (tipo === 'Cambio Cobertura') {
                 payload.nuevo_seguro = eventoNuevoSeguro.value;
                 payload.nuevo_seguro_otros = eventoNuevoSeguro.value === 'Otros' ? eventoNuevoSeguroOtros.value.trim() : null;
+            }
+            
+            if (tipo === 'Cambio de Servicio') {
+                payload.servicio_de = eventoServicioDe.value;
+                payload.servicio_hacia = eventoServicioHacia.value;
             }
 
             const { error } = await client.from('historial_eventos').insert([payload]);
@@ -401,6 +468,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (dniParam) {
         filterDni.value = dniParam;
+        // Mostrar estado de carga inmediato para mejorar UX
+        searchFilters.style.display = 'none';
+        viewResultados.style.display = 'none';
+        loadingIndicator.style.display = 'block';
+        
         try {
             const { data, error } = await client
                 .from('pacientes')
@@ -410,9 +482,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (error) throw error;
             if (data) {
+                loadingIndicator.style.display = 'none';
                 openTimeline(data);
             }
         } catch (err) {
+            loadingIndicator.style.display = 'none';
+            searchFilters.style.display = 'grid';
             console.error('Error cargando paciente por DNI:', err.message);
             showToast('No se encontr\u00F3 paciente con DNI ' + dniParam, '#ef4444');
         }

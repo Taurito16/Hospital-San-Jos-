@@ -132,16 +132,28 @@
                         <!-- SERVICIO -->
                         <div class="input-stacked col-span-3">
                             <label>Servicio</label>
-                            <input type="text" id="paciente-servicio" class="standard-input">
+                            <div class="standard-select-wrapper">
+                                <select id="paciente-servicio" class="standard-input" required>
+                                    <option value="" disabled selected hidden>Seleccione Servicio</option>
+                                    <option value="Shock trauma">Shock trauma</option>
+                                    <option value="Salud mental">Salud mental</option>
+                                    <option value="UVI">UVI</option>
+                                    <option value="Medicina">Medicina</option>
+                                    <option value="Cirugía">Cirugía</option>
+                                    <option value="Pediatría">Pediatría</option>
+                                    <option value="Neonatología">Neonatología</option>
+                                    <option value="Ginecología">Ginecología</option>
+                                    <option value="Puerperio">Puerperio</option>
+                                </select>
+                            </div>
                         </div>
 
                         <!-- CONDICION ACTUAL -->
                         <div class="input-stacked col-span-3">
-                            <label>Condición Actual *</label>
+                            <label>Condición Actual</label>
                             <div class="material-select-wrapper">
                                 <select id="paciente-condicion" class="standard-input" required>
-                                    <option value="" disabled selected hidden>Seleccione</option>
-                                    <option value="Hospitalizado">Hospitalizado</option>
+                                    <option value="Hospitalizado" selected>Hospitalizado</option>
                                     <option value="Salió de Alta">Alta</option>
                                     <option value="Fallecido">Fallecido</option>
                                 </select>

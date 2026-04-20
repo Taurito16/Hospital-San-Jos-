@@ -59,16 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
             </div>
 
-            <div class="nav-item has-sub ${currentPage.includes('seguimiento') || currentPage.includes('verificacion') ? 'active' : ''}">
-                <div class="nav-link">
-                    <i class="fa-solid fa-bed-pulse"></i>
-                    <span>Seguimiento Pacientes Hospitalizados</span>
-                </div>
-                <div class="sub-menu">
-                    <a href="${bp}modulos/seguimiento/seguimiento-pacientes.html" class="${currentPage === 'seguimiento-pacientes.html' ? 'selected' : ''}">B\u00FAsqueda Pacientes</a>
-                    <a href="${bp}modulos/seguimiento/verificacion-paciente.html" class="${currentPage === 'verificacion-paciente.html' ? 'selected' : ''}">Verificaci\u00F3n - Actualizaci\u00F3n</a>
-                </div>
-            </div>
+                    <div class="nav-item ${currentPage.includes('seguimiento') || currentPage.includes('verificacion') ? 'active' : ''}">
+                        <a href="${bp}modulos/seguimiento/seguimiento-pacientes.html" class="nav-link">
+                            <i class="fa-solid fa-bed-pulse"></i>
+                            <span>Seguimiento de Pacientes</span>
+                        </a>
+                    </div>
 
             <div class="nav-item ${currentPage === 'reportes.html' ? 'active' : ''}">
                 <a href="${bp}modulos/reportes/reportes.html" class="nav-link">
@@ -89,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     aside.className = 'sidebar collapsible-sidebar';
     aside.innerHTML = sidebarHTML;
 
-    const userEmail = sessionStorage.getItem('userEmail') || '';
+    const userName = sessionStorage.getItem('userName') || '';
 
     // Cabecera Global Uniforme para TODAS las vistas
     let headerHTML = `
@@ -101,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="profile-btn" id="profile-btn" style="display: flex; align-items: center; gap: 12px; background: transparent; border: none; cursor: pointer; padding: 5px 10px; border-radius: 8px;">
                     <i class="fa-solid fa-circle-user profile-icon" style="font-size: 2rem; color: #64748b;"></i>
                     <div class="user-info-text" style="display: flex; flex-direction: column; align-items: flex-start; text-align: left;">
-                        <span class="user-email" id="global-user-email" style="font-size: 13px; font-weight: 600; color: #1e293b;">${userEmail}</span>
+                        <span class="user-email" id="global-user-name" style="font-size: 13px; font-weight: 600; color: #1e293b; text-transform: uppercase;">${userName}</span>
                         <span class="user-role-soft" id="global-user-role" style="font-size: 12px; color: #64748b;">${rolNombre !== '...' ? rolNombre : 'Cargando...'}</span>
                     </div>
                 </button>
@@ -161,40 +157,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadGlobalRole = async () => {
         const roleSpan = document.getElementById('global-user-role');
-        const emailSpan = document.getElementById('global-user-email');
+        const nameSpan = document.getElementById('global-user-name');
         const client = typeof supabaseClient !== 'undefined' ? supabaseClient : null;
         if (!client) return;
 
         try {
-            if (sessionStorage.getItem('userRole') && sessionStorage.getItem('userEmail')) return; 
+            if (sessionStorage.getItem('userRole') && sessionStorage.getItem('userName')) return; 
 
             const { data: { session } } = await client.auth.getSession();
             if (!session) return;
             const user = session.user;
-            
-            sessionStorage.setItem('userEmail', user.email);
-            if (emailSpan) emailSpan.textContent = user.email;
 
             const { data: profile } = await client.from('perfiles')
-                .select('roles(nombre)')
+                .select('nombre_completo, roles(nombre)')
                 .eq('id_usuario', user.id)
                 .single();
 
-            if (profile && profile.roles) {
-                const fetchedRole = profile.roles.nombre;
+            if (profile) {
+                const fetchedRole = profile.roles ? profile.roles.nombre : 'Usuario';
+                const fetchedName = profile.nombre_completo || user.email;
+                
                 sessionStorage.setItem('userRole', fetchedRole);
+                sessionStorage.setItem('userName', fetchedName);
+                
                 if (roleSpan) roleSpan.textContent = fetchedRole;
+                if (nameSpan) nameSpan.textContent = fetchedName.toUpperCase();
+                
                 window.location.reload(); 
-            } else {
-                sessionStorage.setItem('userRole', 'Usuario');
-                if (roleSpan) roleSpan.textContent = 'Usuario';
             }
         } catch (e) {
             console.error(e);
         }
     };
 
-    if (rolNombre === '...' || !userEmail) {
+    if (rolNombre === '...' || !userName) {
         loadGlobalRole();
     }
 });
