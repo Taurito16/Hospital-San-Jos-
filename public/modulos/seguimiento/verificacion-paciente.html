@@ -64,6 +64,14 @@
 
             <!-- SECCION DE TIMELINE (OCULTA POR DEFECTO) -->
             <div id="view-timeline" style="display: none; margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <button id="btn-back-to-list" class="btn-module shadow" style="background: white; color: #1e293b; border: 1px solid #e2e8f0; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-arrow-left"></i> Volver a Información General
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Banner del paciente -->
                 <div class="patient-info-banner">
                     <div class="banner-details">
@@ -73,9 +81,6 @@
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div id="banner-dias" class="dias-badge dias-activo" style="font-size: 14px; padding: 8px 16px;">0 d&#237;as</div>
                         <div id="banner-condicion" class="condicion-badge cond-hospitalizado" style="font-size: 14px; padding: 8px 16px;">Hospitalizado</div>
-                        <button class="btn-module" id="btn-back-to-list" style="background: #f1f5f9; color: #64748b; padding: 8px 15px;">
-                            <i class="fa-solid fa-arrow-left"></i> Cambiar Paciente
-                        </button>
                     </div>
                 </div>
 

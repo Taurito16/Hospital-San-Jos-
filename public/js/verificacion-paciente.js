@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toast = document.getElementById('toast');
 
     let selectedPatient = null;
+    let currentCiclo = null;
 
     const normalizeText = (text) => {
         if (!text) return '';
@@ -134,10 +135,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td><span class="condicion-badge ${getCondicionClass(item.condicion)}">${item.condicion}</span></td>
                 <td style="text-align: center;">
                     <button class="btn-module primary btn-select-patient" data-id="${item.id}" style="padding: 5px 10px; font-size: 12px;">
-                        <i class="fa-solid fa-timeline"></i> Verificar
+                        <i class="fa-solid fa-timeline"></i> Actualizar
                     </button>
                 </td>
             `;
+            
+            // Click en la fila para ir al detalle (historial real)
+            row.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    window.location.href = `detalle-paciente.html?dni=${item.dni}&from=verif`;
+                }
+            });
+            
             tbodyPacientes.appendChild(row);
         });
 
@@ -153,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     // TIMELINE
     // ============================================
-    const openTimeline = async (patient) => {
+    const openTimeline = async (patient, autoLoadCiclo = null) => {
         selectedPatient = patient;
 
         // Ocultar busqueda, mostrar timeline
@@ -185,18 +194,58 @@ document.addEventListener('DOMContentLoaded', async () => {
             eventoDetalle.disabled = false;
         }
 
+        eventoServicioDe.disabled = true; // Bloquear 'De' porque siempre es el servicio actual
+
+        if (autoLoadCiclo) {
+            currentCiclo = autoLoadCiclo;
+        } else if (!urlParams.get('ciclo')) {
+            // Fetch max ciclo to load the latest
+            const { data } = await client
+                .from('historial_eventos')
+                .select('ciclo_id')
+                .eq('paciente_id', patient.id)
+                .order('ciclo_id', { ascending: false })
+                .limit(1);
+            if (data && data.length > 0) {
+                currentCiclo = data[0].ciclo_id;
+            } else {
+                currentCiclo = 1;
+            }
+        }
+
         await loadTimeline();
     };
 
     const loadTimeline = async () => {
         try {
-            const { data: eventos, error } = await client
+            let q = client
                 .from('historial_eventos')
                 .select('*')
                 .eq('paciente_id', selectedPatient.id)
                 .order('fecha_evento', { ascending: true });
 
+            if (currentCiclo) {
+                q = q.eq('ciclo_id', currentCiclo);
+            }
+
+            const { data: eventos, error } = await q;
+
             if (error) throw error;
+
+            // Verificar si el ciclo está cerrado
+            const isClosed = eventos.some(ev => ev.tipo_evento === 'Alta' || ev.tipo_evento === 'Fallecido');
+            
+            if (isClosed) {
+                document.querySelector('.event-form-section').style.display = 'none';
+            } else {
+                document.querySelector('.event-form-section').style.display = 'block';
+            }
+
+            // Cambiar titulo
+            const timelineHeader = document.querySelector('.timeline-header h3');
+            if (timelineHeader) {
+                timelineHeader.innerHTML = `<i class="fa-solid fa-timeline" style="color: #3b82f6; margin-right: 10px;"></i>Registro #${currentCiclo || 1}`;
+            }
 
             renderTimeline(eventos || []);
             updateBannerStats(eventos || []);
@@ -325,6 +374,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (val === 'Cambio de Servicio' && selectedPatient) {
             eventoServicioDe.value = selectedPatient.servicio || '';
+            // Inhabilitar "Hacia" si es el mismo
+            Array.from(eventoServicioHacia.options).forEach(opt => {
+                opt.disabled = opt.value === eventoServicioDe.value && eventoServicioDe.value !== "";
+            });
+            eventoServicioHacia.value = '';
         }
     });
 
@@ -388,7 +442,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 paciente_id: selectedPatient.id,
                 tipo_evento: tipo,
                 detalle: eventoDetalle.value.trim() || null,
-                registrado_por: userId
+                registrado_por: userId,
+                ciclo_id: currentCiclo || 1
             };
 
             if (tipo === 'Cambio Cobertura') {
@@ -417,6 +472,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 bannerInfo.textContent = 'DNI: ' + selectedPatient.dni + ' | HC: ' + selectedPatient.historia_clinica + ' | Seguro: ' + selectedPatient.tipo_seguro + (selectedPatient.seguro_otros ? ' (' + selectedPatient.seguro_otros + ')' : '') + ' | Servicio: ' + (selectedPatient.servicio || 'N/A');
             }
 
+            // Si es un evento terminal, redirigir a detalle
+            if (tipo === 'Alta' || tipo === 'Fallecido') {
+                showToast('Evento registrado exitosamente', '#10b981');
+                setTimeout(() => {
+                    window.location.href = `detalle-paciente.html?dni=${selectedPatient.dni}`;
+                }, 3000);
+                return;
+            }
+
             showToast('Evento registrado exitosamente', '#10b981');
             eventForm.reset();
             grupoNuevoSeguro.style.display = 'none';
@@ -437,10 +501,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // NAVEGACION
     // ============================================
     btnBackToList.addEventListener('click', () => {
-        viewTimeline.style.display = 'none';
-        viewResultados.style.display = 'block';
-        searchFilters.style.display = 'grid';
-        selectedPatient = null;
+        if (selectedPatient && selectedPatient.dni) {
+            window.location.href = `detalle-paciente.html?dni=${selectedPatient.dni}`;
+        } else {
+            // Por respaldo (aunque casi imposible tras buscar)
+            window.location.href = 'seguimiento-pacientes.html';
+        }
     });
 
     btnSearch.addEventListener('click', searchPacientes);
@@ -465,8 +531,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     const urlParams = new URLSearchParams(window.location.search);
     const dniParam = urlParams.get('dni');
+    const cicloParam = urlParams.get('ciclo');
 
     if (dniParam) {
+        if (cicloParam) currentCiclo = parseInt(cicloParam, 10);
+        
         filterDni.value = dniParam;
         // Mostrar estado de carga inmediato para mejorar UX
         searchFilters.style.display = 'none';

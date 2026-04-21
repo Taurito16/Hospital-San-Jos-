@@ -15,13 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const userBtnHTML = isHighAccess 
         ? `<a href="${bp}modulos/usuarios/gestion-user.html" class="${currentPage === 'gestion-user.html' ? 'selected' : ''}">Usuarios</a>`
-        : `<a href="#" class="blocked-link" onclick="event.preventDefault(); alert('Su nivel de acceso (Usuario) no le permite ingresar a este subm\u00F3dulo administrativo.');">Usuarios</a>`;
+        : `<a href="#" class="blocked-link" onclick="event.preventDefault(); alert('Su nivel de acceso (Usuario) no le permite ingresar a este submódulo administrativo.');">Usuarios</a>`;
 
     const sidebarHTML = `
         <div class="sidebar-header">
             <img src="${bp}img/logotipo_transparent.png" alt="Logo MINSA" class="sidebar-logo">
             <div class="sidebar-header-text">
-                <h2>Hospital San Jos\u00E9</h2>
+                <h2>Hospital San José</h2>
                 <p>Unidad de Seguros (SIS)</p>
             </div>
         </div>
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="nav-item has-sub ${['gestion-admin.html', 'gestion-user.html'].includes(currentPage) ? 'active' : ''}">
                 <div class="nav-link">
                     <i class="fa-solid fa-users"></i>
-                    <span>Gesti\u00F3n de Usuarios</span>
+                    <span>Gestión de Usuarios</span>
                 </div>
                 <div class="sub-menu">
                     ${adminBtnHTML}
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="nav-item ${currentPage === 'tramite.html' ? 'active' : ''}">
                 <a href="${bp}modulos/tramite/tramite.html" class="nav-link">
                     <i class="fa-solid fa-file-signature"></i>
-                    <span>Tr\u00E1mite Documentario</span>
+                    <span>Trámite Documentario</span>
                 </a>
             </div>
 
@@ -59,12 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
             </div>
 
-                    <div class="nav-item ${currentPage.includes('seguimiento') || currentPage.includes('verificacion') ? 'active' : ''}">
-                        <a href="${bp}modulos/seguimiento/seguimiento-pacientes.html" class="nav-link">
-                            <i class="fa-solid fa-bed-pulse"></i>
-                            <span>Seguimiento de Pacientes</span>
-                        </a>
-                    </div>
+            <div class="nav-item has-sub ${currentPage.includes('seguimiento') || currentPage.includes('verificacion') || currentPage.includes('detalle-paciente') ? 'active' : ''}">
+                <div class="nav-link">
+                    <i class="fa-solid fa-bed-pulse"></i>
+                    <span>Seguimiento de Pacientes</span>
+                </div>
+                <div class="sub-menu">
+                    <a href="${bp}modulos/seguimiento/seguimiento-pacientes.html" class="${currentPage.includes('seguimiento') || currentPage.includes('detalle-paciente') ? 'selected' : ''}">Búsqueda Pacientes</a>
+                    <a href="${bp}modulos/seguimiento/verificacion-paciente.html" class="${currentPage.includes('verificacion') ? 'selected' : ''}">Verificación - Actualización</a>
+                </div>
+            </div>
 
             <div class="nav-item ${currentPage === 'reportes.html' ? 'active' : ''}">
                 <a href="${bp}modulos/reportes/reportes.html" class="nav-link">
@@ -76,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="sidebar-footer">
             <button class="logout-btn" id="sidebar-logout-btn">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                <span class="logout-text">Cerrar Sesi\u00F3n</span>
+                <span class="logout-text">Cerrar Sesión</span>
             </button>
         </div>
     `;
@@ -103,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
                 <div class="dropdown-menu" id="dropdown-menu" style="right: 10px; top: calc(100% + 10px);">
                     <a href="#"><i class="fa-solid fa-user-pen"></i> Editar Perfil</a>
-                    <a href="#" id="global-logout-btn" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesi\u00F3n</a>
+                    <a href="#" id="global-logout-btn" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión</a>
                 </div>
             </div>
         </div>
@@ -146,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     await client.auth.signOut();
                     sessionStorage.removeItem('userRole');
                     sessionStorage.removeItem('userEmail');
+                    sessionStorage.removeItem('userName');
                     window.location.href = `${bp}index.html`;
                 }
             });
@@ -175,15 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (profile) {
                 const fetchedRole = profile.roles ? profile.roles.nombre : 'Usuario';
-                const fetchedName = profile.nombre_completo || user.email;
+                const fetchedName = (profile.nombre_completo && profile.nombre_completo.trim() !== '') ? profile.nombre_completo.toUpperCase() : user.email.toUpperCase();
                 
                 sessionStorage.setItem('userRole', fetchedRole);
                 sessionStorage.setItem('userName', fetchedName);
                 
                 if (roleSpan) roleSpan.textContent = fetchedRole;
-                if (nameSpan) nameSpan.textContent = fetchedName.toUpperCase();
-                
-                window.location.reload(); 
+                if (nameSpan) nameSpan.textContent = fetchedName;
             }
         } catch (e) {
             console.error(e);
@@ -195,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-
 // OFFLINE HANDLING
 window.addEventListener('offline', () => {
     let offlineDiv = document.getElementById('global-offline-banner');
@@ -205,14 +207,14 @@ window.addEventListener('offline', () => {
         document.body.appendChild(offlineDiv);
     }
     offlineDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); z-index: 99999; display: flex; align-items: center; justify-content: center;';
-    offlineDiv.innerHTML = '<div style="background: #ef4444; color: white; padding: 20px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"><i class="fa-solid fa-wifi" style="margin-right: 12px;"></i> Est\u00E1s sin conexi\u00F3n a internet. Reconectando...</div>';
+    offlineDiv.innerHTML = '<div style="background: #ef4444; color: white; padding: 20px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"><i class="fa-solid fa-wifi" style="margin-right: 12px;"></i> Estás sin conexión a internet. Reconectando...</div>';
     document.body.style.overflow = 'hidden';
 });
 
 window.addEventListener('online', () => {
     const offlineDiv = document.getElementById('global-offline-banner');
     if(offlineDiv) {
-        offlineDiv.innerHTML = '<div style="background: #22c55e; color: white; padding: 20px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"><i class="fa-solid fa-check" style="margin-right: 12px;"></i> Conexi\u00F3n restaurada</div>';
+        offlineDiv.innerHTML = '<div style="background: #22c55e; color: white; padding: 20px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"><i class="fa-solid fa-check" style="margin-right: 12px;"></i> Conexión restaurada</div>';
         setTimeout(() => {
             offlineDiv.remove();
             document.body.style.overflow = 'auto';

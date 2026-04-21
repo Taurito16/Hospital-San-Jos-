@@ -148,137 +148,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </button>
                 </td>
             `;
+            // La fila ya no será accionable, todo el control pasa al botón
+            row.style.cursor = 'default';
             
-            // Click en fila para ver detalle completo
-            row.addEventListener('click', (e) => {
-                if (!e.target.closest('button')) {
-                    window.location.href = `paciente-detalle.html?id=${item.id}`;
-                }
+            const btn = row.querySelector('.btn-history');
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.location.href = `detalle-paciente.html?dni=${item.dni}`;
             });
 
             tbody.appendChild(row);
         });
-
-        document.querySelectorAll('.btn-history').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.getAttribute('data-id');
-                const p = items.find(x => x.id == id);
-                if (p) openHistoryInline(p);
-            });
-        });
     };
-
-    const openHistoryInline = async (p) => {
-        selectedPatient = p;
-        viewHistoryInline.style.display = 'block';
-        historyPatientName.textContent = `HISTORIAL: ${p.apellidos}, ${p.nombres}`;
-        window.scrollTo({ top: viewHistoryInline.offsetTop - 100, behavior: 'smooth' });
-
-        // Cargar eventos
-        const { data: eventos, error } = await client
-            .from('historial_eventos')
-            .select('*')
-            .eq('paciente_id', p.id)
-            .order('fecha_evento', { ascending: true });
-
-        if (error) return;
-
-        renderHistoryContent(eventos || []);
-    };
-
-    const renderHistoryContent = (eventos) => {
-        // Separar por registros (ciclos de Hospitalizado -> Alta/Fallecido)
-        const registros = [];
-        let currentReg = null;
-
-        eventos.forEach(ev => {
-            if (ev.tipo_evento === 'Hospitalizado') {
-                if (currentReg) registros.push(currentReg);
-                currentReg = { inicio: ev, fin: null, eventos: [ev] };
-            } else if (currentReg) {
-                currentReg.eventos.push(ev);
-                if (ev.tipo_evento === 'Alta' || ev.tipo_evento === 'Fallecido') {
-                    currentReg.fin = ev;
-                    registros.push(currentReg);
-                    currentReg = null;
-                }
-            }
-        });
-        if (currentReg) registros.push(currentReg);
-
-        // KPIs
-        const totalDias = calcularDiasTotales(eventos, selectedPatient.condicion);
-        const numIngresos = registros.length;
-        historyKpis.innerHTML = `
-            <div class="detail-item" style="background:white; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                <label style="font-size:10px; color:#64748b; font-weight:700;">D\u00CDAS TOTALES</label>
-                <span style="font-size:18px; font-weight:800; color:#3b82f6;">${totalDias}</span>
-            </div>
-            <div class="detail-item" style="background:white; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                <label style="font-size:10px; color:#64748b; font-weight:700;">INGRESOS</label>
-                <span style="font-size:18px; font-weight:800; color:#10b981;">${numIngresos}</span>
-            </div>
-            <div class="detail-item" style="background:white; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">
-                <label style="font-size:10px; color:#64748b; font-weight:700;">CONDICI\u00D3N</label>
-                <span style="font-size:18px; font-weight:800;">${selectedPatient.condicion}</span>
-            </div>
-        `;
-
-        // Botones de Registros
-        historyRecordsButtons.innerHTML = '';
-        registros.forEach((reg, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-module';
-            btn.style.background = reg.fin ? '#f1f5f9' : '#dcfce7';
-            btn.style.color = reg.fin ? '#475569' : '#166534';
-            btn.innerHTML = `<i class="fa-solid fa-folder-open"></i> Registro ${idx + 1} ${reg.fin ? '(Cerrado)' : '(Activo)'}`;
-            btn.onclick = () => renderTimelineInline(reg.eventos);
-            historyRecordsButtons.appendChild(btn);
-        });
-
-        // Boton Nuevo Registro (Si el ultimo esta cerrado y no ha fallecido)
-        const ultimoCerrado = registros.length === 0 || registros[registros.length-1].fin !== null;
-        if (ultimoCerrado && selectedPatient.condicion !== 'Fallecido') {
-            const btnNew = document.createElement('button');
-            btnNew.className = 'btn-module primary';
-            btnNew.innerHTML = `<i class="fa-solid fa-plus"></i> Nuevo Registro`;
-            btnNew.onclick = () => window.location.href = `verificacion-paciente.html?dni=${selectedPatient.dni}`;
-            historyRecordsButtons.appendChild(btnNew);
-        }
-
-        // Renderizar ultimo por defecto
-        if (registros.length > 0) {
-            renderTimelineInline(registros[registros.length - 1].eventos);
-        } else {
-            historyTimelineContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No hay eventos registrados.</p>';
-        }
-    };
-
-    const renderTimelineInline = (eventos) => {
-        historyTimelineContainer.innerHTML = '';
-        eventos.forEach(ev => {
-            const date = new Date(ev.fecha_evento);
-            const item = document.createElement('div');
-            item.className = 'timeline-event';
-            item.style.marginBottom = '15px';
-            item.style.paddingLeft = '30px';
-            item.style.position = 'relative';
-            item.style.borderLeft = '2px solid #e2e8f0';
-            
-            item.innerHTML = `
-                <div style="position:absolute; left:-7px; top:0; width:12px; height:12px; border-radius:50%; background:#3b82f6; border:2px solid white;"></div>
-                <div style="font-size:12px; color:#64748b; font-weight:600;">${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                <div style="font-weight:700; color:#1e293b;">${ev.tipo_evento}</div>
-                <div style="font-size:13px; color:#475569;">${ev.detalle || ''}</div>
-            `;
-            historyTimelineContainer.appendChild(item);
-        });
-    };
-
-    btnCloseHistory.addEventListener('click', () => {
-        viewHistoryInline.style.display = 'none';
-        selectedPatient = null;
-    });
 
     // Paginacion y Busqueda (igual que antes)
     const renderPagination = () => {

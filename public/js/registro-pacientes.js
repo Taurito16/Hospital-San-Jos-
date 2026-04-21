@@ -172,26 +172,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         form.reset();
         document.getElementById('paciente-id').value = p.id;
         
-        // Block all except the 3 editable fields
+        // Bloquear todos los campos temporalmente
+        document.querySelectorAll('.standard-input').forEach(el => el.disabled = true);
+
+        // Volcar data
         document.getElementById('paciente-dni').value = p.dni;
-        document.getElementById('paciente-dni').disabled = true;
-
         document.getElementById('paciente-hc').value = p.historia_clinica;
-        document.getElementById('paciente-hc').disabled = true;
-
         document.getElementById('paciente-fecha-nac').value = p.fecha_nacimiento;
-        document.getElementById('paciente-fecha-nac').disabled = true;
-
         document.getElementById('paciente-apellidos').value = p.apellidos;
-        document.getElementById('paciente-apellidos').disabled = true;
-
         document.getElementById('paciente-nombres').value = p.nombres;
-        document.getElementById('paciente-nombres').disabled = true;
-
         document.getElementById('paciente-codigo-ver').value = p.codigo_verificacion || '';
-        document.getElementById('paciente-codigo-ver').disabled = true;
-
-        // Editable fields
         selectSeguro.value = p.tipo_seguro;
         document.getElementById('paciente-servicio').value = p.servicio || '';
         document.getElementById('paciente-condicion').value = p.condicion;
@@ -203,6 +193,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             grupoOtros.style.display = 'none';
             inputOtros.required = false;
+        }
+
+        // Si falleció, NO permitir editar nada
+        if (p.condicion === 'Fallecido') {
+            btnGuardar.style.display = 'none';
+            // Crear/mostrar un mensajito si se quiere
+        } else {
+            btnGuardar.style.display = 'flex';
+            // Rehabilitar solo los 2 campos
+            selectSeguro.disabled = false;
+            document.getElementById('paciente-servicio').disabled = false;
+            if (p.tipo_seguro === 'Otros') inputOtros.disabled = false;
         }
 
         viewLista.style.display = 'none';
@@ -327,6 +329,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Reset disabled states uniformly
         document.querySelectorAll('.standard-input').forEach(el => el.disabled = false);
+        
+        // Forzar Condición "Hospitalizado" al registrar nuevo y bloquear
+        const condicionSelect = document.getElementById('paciente-condicion');
+        condicionSelect.value = 'Hospitalizado';
+        condicionSelect.disabled = true;
 
         grupoOtros.style.display = 'none';
         inputOtros.required = false;
