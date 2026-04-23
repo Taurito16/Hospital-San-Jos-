@@ -106,6 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cabecera Global Uniforme para TODAS las vistas
     let headerHTML = `
         <div class="header-left">
+            <button type="button" id="sidebar-toggle-btn" class="sidebar-toggle-btn" aria-label="Abrir menú" aria-expanded="false" title="Menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <h1 class="welcome-text">Bienvenido</h1>
         </div>
         <div class="header-right">
@@ -130,11 +133,117 @@ document.addEventListener('DOMContentLoaded', () => {
     header.innerHTML = headerHTML;
 
     body.insertBefore(aside, body.firstChild);
+
+    // Overlay para modo móvil (drawer)
+    const overlay = document.createElement('div');
+    overlay.id = 'sidebar-overlay';
+    overlay.setAttribute('hidden', 'true');
+    body.appendChild(overlay);
     
     const wrapper = document.querySelector('.main-wrapper');
     if (wrapper) {
         wrapper.insertBefore(header, wrapper.firstChild);
     }
+
+    // Drawer móvil/tablet: abrir/cerrar sidebar sin depender de hover
+    const isTouchLayout = () => {
+        if (!window.matchMedia) return false;
+        const isSmall = window.matchMedia('(max-width: 1024px)').matches;
+        const isTouchy = window.matchMedia('(hover: none)').matches || window.matchMedia('(pointer: coarse)').matches;
+        return isSmall && isTouchy;
+    };
+
+    const expandCurrentSection = () => {
+        // Mantener desplegada la sección actual al abrir el drawer
+        // (basado en clases ya renderizadas: .active en nav-item y .selected en links)
+        const groups = aside.querySelectorAll('.nav-item.has-sub');
+        groups.forEach(g => {
+            const hasSelected = !!g.querySelector('.sub-menu a.selected');
+            if (hasSelected) g.classList.add('active');
+        });
+    };
+
+    const setSidebarOpen = (open) => {
+        body.classList.toggle('sidebar-open', open);
+        const btn = document.getElementById('sidebar-toggle-btn');
+        if (btn) {
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+        }
+        if (overlay) {
+            if (open) overlay.removeAttribute('hidden');
+            else overlay.setAttribute('hidden', 'true');
+        }
+        if (open) expandCurrentSection();
+    };
+
+    const toggleSidebar = () => {
+        setSidebarOpen(!body.classList.contains('sidebar-open'));
+    };
+
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleSidebar();
+        });
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', () => setSidebarOpen(false));
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setSidebarOpen(false);
+    });
+
+    // Toggles de submenú (mobile/tablet): click en el título despliega/contrae sin navegar
+    aside.querySelectorAll('.nav-item.has-sub > .nav-link').forEach((toggleEl) => {
+        toggleEl.setAttribute('role', 'button');
+        toggleEl.setAttribute('tabindex', '0');
+        toggleEl.setAttribute('aria-expanded', toggleEl.parentElement.classList.contains('active') ? 'true' : 'false');
+
+        const handleToggle = (e) => {
+            if (!isTouchLayout()) return; // en desktop conserva comportamiento original (hover + active)
+            e.preventDefault();
+            e.stopPropagation();
+            const targetGroup = toggleEl.parentElement;
+
+            // En móvil/tablet: el sombreado debe representar el "grupo" activo
+            // (si abres Gestión/Consultas/etc, "Inicio" no debe quedar activo)
+            const wasOpen = targetGroup.classList.contains('active');
+
+            aside.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            // Cerrar otros grupos para evitar scroll excesivo (estilo menú original)
+            aside.querySelectorAll('.nav-item.has-sub').forEach(g => g.classList.remove('active'));
+
+            if (!wasOpen) {
+                targetGroup.classList.add('active');
+            }
+
+            toggleEl.setAttribute('aria-expanded', toggleEl.parentElement.classList.contains('active') ? 'true' : 'false');
+        };
+
+        toggleEl.addEventListener('click', handleToggle);
+        toggleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') handleToggle(e);
+        });
+    });
+
+    // Cerrar al navegar desde el sidebar (móvil/tablet)
+    aside.addEventListener('click', (e) => {
+        if (!isTouchLayout()) return;
+        const a = e.target.closest('a');
+        if (a && a.getAttribute('href') && a.getAttribute('href') !== '#') {
+            setSidebarOpen(false);
+        }
+    });
+
+    // Al cambiar tamaño, cerrar el drawer para evitar estados inconsistentes
+    window.addEventListener('resize', () => {
+        if (!isTouchLayout()) setSidebarOpen(false);
+    });
     
     const profileBtn = document.getElementById('profile-btn');
     const dropdownMenu = document.getElementById('dropdown-menu');

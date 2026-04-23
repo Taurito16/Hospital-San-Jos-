@@ -241,3 +241,24 @@ select.material-select {
     gap: 0 25px;
     align-items: start;
 }
+
+/* Responsive: evitar overflow y solapes en el grid del formulario */
+@media (max-width: 768px) {
+    #registro-form {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    #registro-form {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .col-span-2,
+    .col-span-3,
+    .col-span-6 {
+        grid-column: 1 / -1;
+    }
+}

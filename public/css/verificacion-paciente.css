@@ -173,6 +173,22 @@
     font-size: 14px;
 }
 
+/* Ajuste mobile: evitar overflow horizontal por offsets del timeline */
+@media (max-width: 480px) {
+    .timeline-container {
+        padding-left: 22px;
+    }
+
+    .timeline-container::before {
+        left: 10px;
+    }
+
+    .timeline-dot {
+        left: 0;
+        margin-right: 0;
+    }
+}
+
 .dot-hospitalizado {
     background: #dbeafe;
     color: #2563eb;
