@@ -70,6 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
 
+            <div class="nav-item has-sub ${currentPage.includes('consulta-rapida') || currentPage.includes('consulta-masiva') || currentPage.includes('validacion-global') ? 'active' : ''}">
+                <div class="nav-link">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>Consultas</span>
+                </div>
+                <div class="sub-menu">
+                    <a href="${bp}modulos/consultas/consulta-rapida.html" class="${currentPage.includes('consulta-rapida') ? 'selected' : ''}">Consulta Rápida</a>
+                    <a href="${bp}modulos/consultas/consulta-masiva.html" class="${currentPage.includes('consulta-masiva') ? 'selected' : ''}">Consulta Masiva</a>
+                    <a href="${bp}modulos/consultas/validacion-global.html" class="${currentPage.includes('validacion-global') ? 'selected' : ''}">Validación Global</a>
+                </div>
+            </div>
+
             <div class="nav-item ${currentPage === 'reportes.html' ? 'active' : ''}">
                 <a href="${bp}modulos/reportes/reportes.html" class="nav-link">
                     <i class="fa-solid fa-chart-bar"></i>
@@ -199,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // OFFLINE HANDLING
-window.addEventListener('offline', () => {
+const handleOffline = () => {
     let offlineDiv = document.getElementById('global-offline-banner');
     if (!offlineDiv) {
         offlineDiv = document.createElement('div');
@@ -209,7 +221,13 @@ window.addEventListener('offline', () => {
     offlineDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(255,255,255,0.8); backdrop-filter: blur(5px); z-index: 99999; display: flex; align-items: center; justify-content: center;';
     offlineDiv.innerHTML = '<div style="background: #ef4444; color: white; padding: 20px 40px; border-radius: 8px; font-size: 18px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2);"><i class="fa-solid fa-wifi" style="margin-right: 12px;"></i> Estás sin conexión a internet. Reconectando...</div>';
     document.body.style.overflow = 'hidden';
-});
+};
+
+window.addEventListener('offline', handleOffline);
+
+if (!navigator.onLine) {
+    handleOffline();
+}
 
 window.addEventListener('online', () => {
     const offlineDiv = document.getElementById('global-offline-banner');

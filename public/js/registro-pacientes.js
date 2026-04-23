@@ -72,6 +72,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 option.textContent = servicio;
                 filterServicio.appendChild(option);
             });
+
+            if (sessionStorage.getItem('rp_filter_servicio')) {
+                filterServicio.value = sessionStorage.getItem('rp_filter_servicio');
+                filterQuery = filterServicio.value;
+                btnClearFilterServicio.style.display = 'block';
+            }
         } catch (error) {
             console.error('Error cargando servicios:', error.message);
         }
@@ -149,9 +155,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${item.codigo_verificacion || '-'}</td>
                 <td>${item.servicio || '-'}</td>
                 <td><span class="condicion-badge ${condClass}">${item.condicion}</span></td>
-                <td style="text-align: center;">
+                <td style="text-align: center; display: flex; justify-content: center; gap: 8px;">
                     <button class="action-btn-edit local-edit-btn" data-id="${item.id}" title="Editar Paciente">
                         <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="action-btn-edit local-rpa-btn" data-dni="${item.dni}" title="Ejecutar Consulta RPA" style="color: #3b82f6;">
+                        <i class="fa-solid fa-clipboard-check"></i>
                     </button>
                 </td>
             `;
@@ -164,6 +173,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const rowId = e.currentTarget.getAttribute('data-id');
                 const p = items.find(x => x.id == rowId);
                 if(p) openEditForm(p);
+            });
+        });
+
+        // Add RPA Hooks
+        document.querySelectorAll('.local-rpa-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const dni = e.currentTarget.getAttribute('data-dni');
+                if (dni) {
+                    window.location.href = `../consultas/consulta-rapida.html?autoRpaDni=${dni}`;
+                }
             });
         });
     };
@@ -258,6 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const val = btnSearchDni.value.trim();
         if (val) {
             searchQuery = val;
+            sessionStorage.setItem('rp_search_query', val);
             currentPage = 1;
             btnClearSearch.style.display = 'block';
             loadPacientes();
@@ -272,6 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnClearSearch.addEventListener('click', () => {
         searchQuery = '';
         btnSearchDni.value = '';
+        sessionStorage.removeItem('rp_search_query');
         btnClearSearch.style.display = 'none';
         currentPage = 1;
         loadPacientes();
@@ -280,24 +301,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================
     // FILTRO POR SERVICIO
     // ============================================
-    filterServicio.addEventListener('change', (e) => {
-        const val = e.target.value.trim();
+    const applyFilterServicio = (val) => {
         if (val) {
             filterQuery = val;
+            sessionStorage.setItem('rp_filter_servicio', val);
             currentPage = 1;
             btnClearFilterServicio.style.display = 'block';
             loadPacientes();
         } else {
             filterQuery = '';
+            sessionStorage.removeItem('rp_filter_servicio');
             btnClearFilterServicio.style.display = 'none';
             currentPage = 1;
             loadPacientes();
         }
+    };
+
+    filterServicio.addEventListener('change', (e) => {
+        applyFilterServicio(e.target.value.trim());
+    });
+    
+    filterServicio.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyFilterServicio(e.target.value.trim());
     });
 
     btnClearFilterServicio.addEventListener('click', () => {
         filterQuery = '';
         filterServicio.value = '';
+        sessionStorage.removeItem('rp_filter_servicio');
         btnClearFilterServicio.style.display = 'none';
         currentPage = 1;
         loadPacientes();
@@ -467,6 +498,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Carga inicial
-    loadServicios();
-    loadPacientes();
+    if (sessionStorage.getItem('rp_search_query')) {
+        btnSearchDni.value = sessionStorage.getItem('rp_search_query');
+        searchQuery = btnSearchDni.value;
+        btnClearSearch.style.display = 'block';
+    }
+
+    loadServicios().then(() => {
+        loadPacientes();
+    });
 });

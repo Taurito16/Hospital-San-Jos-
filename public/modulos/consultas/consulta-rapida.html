@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta Rápida RPA - Hospital San José</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+    <link rel="stylesheet" href="../../css/registro-pacientes.css">
+    <link rel="stylesheet" href="../../css/verificacion-paciente.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .badge-ok { background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-alerta { background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-na { background: #94a3b8; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <main class="page-content" id="page-content">
+
+            <div class="page-header" style="margin-bottom: 20px;">
+                <h2>Consulta Rápida RPA</h2>
+                <p>Busque un paciente y ejecute la validación automatizada contra EsSalud.</p>
+            </div>
+
+            <!-- SECCION DE FILTROS -->
+            <div class="search-filters-container" id="search-filters">
+                <div class="filter-group">
+                    <label>DNI</label>
+                    <input type="text" id="filter-dni" class="filter-input" placeholder="Buscar DNI..." maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+                <div class="filter-group">
+                    <label>Historia Clínica</label>
+                    <input type="text" id="filter-hc" class="filter-input" placeholder="Buscar N° HC..." oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+                <div class="filter-group">
+                    <label>Apellidos</label>
+                    <input type="text" id="filter-apellidos" class="filter-input" placeholder="Buscar por apellidos...">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-module primary" id="btn-search" style="padding: 10px 20px;"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
+                    <button class="btn-module" id="btn-clear" style="padding: 10px 20px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;">Limpiar</button>
+                </div>
+            </div>
+
+            <!-- BOTONES ACCION (ocultos inicialmente) -->
+            <div id="actions-bar" style="display: none; margin-top: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; color: #1e293b;"><span id="selected-count">0</span> pacientes seleccionados (Max 2)</span>
+                <button class="btn-module shadow" id="btn-validar" disabled style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; font-weight: 600; cursor: not-allowed; opacity: 0.6;">
+                    Ejecutar Validación RPA
+                    <i id="validar-spinner" class="fa-solid fa-circle-notch fa-spin" style="display:none; margin-left:8px;"></i>
+                </button>
+            </div>
+
+            <!-- LISTA DE RESULTADOS -->
+            <div id="view-resultados" style="margin-top: 20px;">
+                <div class="data-table-container">
+                    <div id="loading-indicator" style="display: none; text-align: center; padding: 40px; color: #3b82f6;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem;"></i>
+                        <p style="margin-top: 10px; font-weight: 500;">Buscando pacientes...</p>
+                    </div>
+                    <table class="data-table" id="table-pacientes" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px; text-align: center;">✓</th>
+                                <th>DNI / CUI</th>
+                                <th>Paciente</th>
+                                <th>Seguro Declarado</th>
+                                <th>Seguro Extraído</th>
+                                <th>Estado RPA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pacientes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div id="toast" class="toast-success" style="display: none;">
+                <i class="fa-solid fa-check-circle" id="toast-icon"></i>
+                <span id="toast-text">Validación completada</span>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="../../js/supabase-config.js"></script>
+    <script src="../../js/layout.js"></script>
+    <script src="consulta-rapida.js"></script>
+</body>
+</html>

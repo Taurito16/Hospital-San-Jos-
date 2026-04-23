@@ -87,6 +87,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const apellidos = normalizeText(filterApellidos.value.trim());
         const nombres = normalizeText(filterNombres.value.trim());
 
+        sessionStorage.setItem('vp_filter_dni', dni);
+        sessionStorage.setItem('vp_filter_hc', hc);
+        sessionStorage.setItem('vp_filter_apellidos', apellidos);
+        sessionStorage.setItem('vp_filter_nombres', nombres);
+
         if (!dni && !hc && !apellidos && !nombres) {
             showToast('Ingrese al menos un criterio de b\u00FAsqueda', '#ef4444');
             return;
@@ -501,12 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // NAVEGACION
     // ============================================
     btnBackToList.addEventListener('click', () => {
-        if (selectedPatient && selectedPatient.dni) {
-            window.location.href = `detalle-paciente.html?dni=${selectedPatient.dni}`;
-        } else {
-            // Por respaldo (aunque casi imposible tras buscar)
-            window.location.href = 'seguimiento-pacientes.html';
-        }
+        window.location.href = 'verificacion-paciente.html';
     });
 
     btnSearch.addEventListener('click', searchPacientes);
@@ -522,6 +522,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         filterHc.value = '';
         filterApellidos.value = '';
         filterNombres.value = '';
+        sessionStorage.removeItem('vp_filter_dni');
+        sessionStorage.removeItem('vp_filter_hc');
+        sessionStorage.removeItem('vp_filter_apellidos');
+        sessionStorage.removeItem('vp_filter_nombres');
         tbodyPacientes.innerHTML = '';
         tablePacientes.style.display = 'none';
     });
@@ -559,6 +563,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             searchFilters.style.display = 'grid';
             console.error('Error cargando paciente por DNI:', err.message);
             showToast('No se encontr\u00F3 paciente con DNI ' + dniParam, '#ef4444');
+        }
+    } else {
+        if (sessionStorage.getItem('vp_filter_dni')) filterDni.value = sessionStorage.getItem('vp_filter_dni');
+        if (sessionStorage.getItem('vp_filter_hc')) filterHc.value = sessionStorage.getItem('vp_filter_hc');
+        if (sessionStorage.getItem('vp_filter_apellidos')) filterApellidos.value = sessionStorage.getItem('vp_filter_apellidos');
+        if (sessionStorage.getItem('vp_filter_nombres')) filterNombres.value = sessionStorage.getItem('vp_filter_nombres');
+        
+        if (filterDni.value || filterHc.value || filterApellidos.value || filterNombres.value) {
+            searchPacientes();
         }
     }
 });

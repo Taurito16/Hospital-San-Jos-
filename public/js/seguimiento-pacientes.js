@@ -187,18 +187,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnSearch.addEventListener('click', () => {
         searchQuery = searchInput.value.trim();
+        sessionStorage.setItem('sp_search_query', searchQuery);
         currentPage = 1;
         btnClear.style.display = searchQuery ? 'block' : 'none';
         loadPacientes();
     });
 
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') btnSearch.click();
+    });
+
     btnClear.addEventListener('click', () => {
         searchQuery = '';
         searchInput.value = '';
+        sessionStorage.removeItem('sp_search_query');
         btnClear.style.display = 'none';
         currentPage = 1;
         loadPacientes();
     });
+
+    if (sessionStorage.getItem('sp_search_query')) {
+        searchInput.value = sessionStorage.getItem('sp_search_query');
+        searchQuery = searchInput.value;
+        btnClear.style.display = 'block';
+    }
 
     loadPacientes();
 });
