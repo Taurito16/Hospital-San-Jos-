@@ -1,18 +1,20 @@
 FROM ghcr.io/puppeteer/puppeteer:latest
 
+# Cambiar a usuario root temporalmente para evitar problemas de permisos
+USER root
+
 WORKDIR /app
 
-# Copiar archivos de configuración de npm
-COPY package*.json ./
+# Copiar los archivos dándoles propiedad al usuario de puppeteer
+COPY --chown=pptruser:pptruser package*.json ./
+COPY --chown=pptruser:pptruser . .
+
+# Volver al usuario seguro de puppeteer
+USER pptruser
 
 # Instalar dependencias
 RUN npm install
 
-# Copiar el código fuente
-COPY . .
-
-# Exponer el puerto
 EXPOSE 3000
 
-# Comando para iniciar el servidor
 CMD ["node", "server.js"]
