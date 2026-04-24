@@ -60,6 +60,16 @@ body {
     font-family: system-ui, -apple-system, sans-serif;
     min-height: 100vh;
     height: auto;
+    opacity: 0; /* Anti-FOUC */
+    animation: fadeInLayout 0.3s forwards;
+}
+
+@keyframes fadeInLayout {
+    to { opacity: 1; }
+}
+
+body.layout-loaded {
+    opacity: 1;
 }
 
 /* LAYOUT DE PANTALLA COMPLETA */
@@ -67,7 +77,7 @@ body {
     min-height: 100vh;
     width: 100%;
     /* Usa un fondo representativo. Ajusta el nombre segÃºn tu imagen grande */
-    background: url('../img/fondo.jpg') center/cover no-repeat fixed;
+    background: url('../img/fondo.jpg') center/cover no-repeat scroll;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -853,7 +863,8 @@ body {
     width: 100%;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     background: #ffffff;
 }
 
@@ -1152,17 +1163,19 @@ body {
 
 
 
-/* FINAL POLISH CSS */
-.sidebar:not(:hover) .nav-link {
-    justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
-}
-.sidebar:not(:hover) .nav-link span {
-    display: none;
-}
-.sidebar:not(:hover) .sub-menu {
-    display: none !important;
+/* FINAL POLISH CSS (Desktop only for collapsible sidebar) */
+@media (min-width: 1025px) {
+    .sidebar:not(:hover) .nav-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .sidebar:not(:hover) .nav-link span {
+        display: none;
+    }
+    .sidebar:not(:hover) .sub-menu {
+        display: none !important;
+    }
 }
 
 .page-content {
@@ -1321,8 +1334,8 @@ body {
     }
 }
 
-/* Drawer/toggle solo para touch (evita afectar monitores pequeños con mouse) */
-@media (max-width: 1024px) and (hover: none), (max-width: 1024px) and (pointer: coarse) {
+/* Drawer/toggle para todas las pantallas menores a 1024px (evita errores en 2/3 desktop) */
+@media (max-width: 1024px) {
     .sidebar-toggle-btn {
         display: inline-flex;
     }

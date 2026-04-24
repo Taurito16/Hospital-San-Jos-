@@ -1,4 +1,4 @@
-﻿/* MÃ³dulo Registro Pacientes - Estilos Locales */
+/* MÃ³dulo Registro Pacientes - Estilos Locales */
 
 .module-commands {
     display: flex;
@@ -116,11 +116,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: transparent;
     cursor: pointer;
     height: auto;
-    left: 0;
     position: absolute;
     right: 0;
     top: 0;
-    width: auto;
+    width: 40px; /* Área clickable restringida a la derecha */
 }
 
 input[type="date"] {

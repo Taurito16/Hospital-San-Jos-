@@ -19,22 +19,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedPatients = [];
     let accumulatedResults = [];
 
-    // Restore filters from sessionStorage
-    if (sessionStorage.getItem('cr_filter_dni')) inputDNI.value = sessionStorage.getItem('cr_filter_dni');
-    if (sessionStorage.getItem('cr_filter_hc')) inputHC.value = sessionStorage.getItem('cr_filter_hc');
-    if (sessionStorage.getItem('cr_filter_apellidos')) inputApellidos.value = sessionStorage.getItem('cr_filter_apellidos');
+    // NO restaurar filtros desde sessionStorage: se limpian siempre al entrar a este módulo
+    // (El usuario pidió que los filtros y tabla se limpien al salir y volver)
 
     const showToast = (message, isError = false) => {
         const toast = document.getElementById('toast');
         const toastIcon = document.getElementById('toast-icon');
         const toastText = document.getElementById('toast-text');
 
+        // Reset classes
         toast.className = isError ? 'toast-error' : 'toast-success';
         toastIcon.className = isError ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-check-circle';
         toastText.textContent = message;
 
-        toast.style.display = 'flex';
-        setTimeout(() => toast.style.display = 'none', 4000);
+        // Force reflow
+        void toast.offsetWidth;
+        
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
     };
 
     const updateActionsBar = () => {
@@ -108,10 +110,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="font-weight: 600;">${p.tipo_seguro || 'NO DECLARADO'}</td>
                 <td id="ext-${p.id}" style="color: #475569;">${p.tipo_seguro_validado || '-'}</td>
                 <td id="badge-${p.id}"><span class="${badgeClass}">${p.estado_validacion || 'N/A'}</span></td>
+                <td style="text-align:center;">
+                    <button id="btn-redirect-${p.id}" style="display:none; background:#3b82f6; color:white; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:13px;" title="Ver registro del paciente">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </button>
+                </td>
             `;
 
             tr.insertBefore(tdCheck, tr.firstChild);
             tbodyPacientes.appendChild(tr);
+
+            // Bind redirect button con el dni del paciente
+            const btnRedir = document.getElementById(`btn-redirect-${p.id}`);
+            if (btnRedir) {
+                btnRedir.addEventListener('click', () => {
+                    // Pasar from=rpa para que el botón "Volver" regrese aquí
+                    window.location.href = `../seguimiento/verificacion-paciente.html?dni=${p.dni}&from=rpa`;
+                });
+            }
         });
 
         tablePacientes.style.display = 'table';
@@ -173,6 +189,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateActionsBar();
 
         renderAccumulatedTable();
+
+        // Limpiar filtros tras la búsqueda (tabla permanece visible)
+        inputDNI.value = '';
+        inputHC.value = '';
+        inputApellidos.value = '';
     };
 
     btnSearch.addEventListener('click', loadPacientes);
@@ -195,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actionsBar.style.display = 'none';
         selectedPatients = [];
         accumulatedResults = [];
+        updateActionsBar();
     });
 
     btnValidar.addEventListener('click', async () => {
@@ -272,7 +294,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         extCell.innerHTML = '<span style="color: #ef4444; font-size: 12px;"><i class="fa-solid fa-triangle-exclamation"></i> Requiere Validar Captcha Manual</span>';
                         badgeCell.innerHTML = '<span class="badge-alerta">ALERTA</span>';
                     } else {
-                        const errorMsg = result.message || 'Datos incorrectos';
+                        // Limpiar mensaje de error para evitar que UI explote con trazas HTML
+                        const errorMsg = 'Datos incorrectos o paciente no encontrado';
                         extCell.innerHTML = `<span style="color: #ef4444; font-size: 12px;"><i class="fa-solid fa-circle-xmark"></i> ${errorMsg}</span>`;
                         badgeCell.innerHTML = '<span class="badge-alerta">ERROR</span>';
                     }
@@ -282,6 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 extCell.innerHTML = `<span style="color: #ef4444; font-size: 12px;">Error de conexión RPA</span>`;
                 badgeCell.innerHTML = '<span class="badge-alerta">ERROR</span>';
             }
+
+            // Mostrar botón de redirección siempre tras completar el RPA del paciente
+            const btnRedir = document.getElementById(`btn-redirect-${paciente.id}`);
+            if (btnRedir) btnRedir.style.display = 'inline-block';
         }
 
         // Unblock UI
@@ -306,6 +333,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoDni = urlParams.get('autoRpaDni');
 
     if (autoDni) {
+        // Limpiar URL para que al refrescar no se vuelva a autoejecutar
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+
         inputDNI.value = autoDni;
         loadPacientes().then(() => {
             setTimeout(() => {

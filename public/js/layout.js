@@ -145,12 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.insertBefore(header, wrapper.firstChild);
     }
 
-    // Drawer móvil/tablet: abrir/cerrar sidebar sin depender de hover
+    // Drawer móvil/tablet: abrir/cerrar sidebar basado solo en ancho (<= 1024px)
     const isTouchLayout = () => {
         if (!window.matchMedia) return false;
-        const isSmall = window.matchMedia('(max-width: 1024px)').matches;
-        const isTouchy = window.matchMedia('(hover: none)').matches || window.matchMedia('(pointer: coarse)').matches;
-        return isSmall && isTouchy;
+        return window.matchMedia('(max-width: 1024px)').matches;
     };
 
     const expandCurrentSection = () => {
@@ -317,6 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rolNombre === '...' || !userName) {
         loadGlobalRole();
     }
+    
+    // Mostrar layout una vez inyectado (Anti-FOUC)
+    document.body.classList.add('layout-loaded');
 });
 
 // OFFLINE HANDLING

@@ -43,6 +43,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
     };
 
+    // Inicializar Flatpickr
+    flatpickr("#paciente-fecha-nac", {
+        locale: "es",
+        dateFormat: "d/m/Y",
+        allowInput: true,
+        maxDate: "today"
+    });
+
     // Variables de Paginación Inteligente y DB
     let currentPage = 1;
     let rowsPerPage = 5; 
@@ -197,7 +205,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Volcar data
         document.getElementById('paciente-dni').value = p.dni;
         document.getElementById('paciente-hc').value = p.historia_clinica;
-        document.getElementById('paciente-fecha-nac').value = p.fecha_nacimiento;
+        
+        // Formatear fecha para Flatpickr (Y-m-d a d/m/Y si viene de BD, aunque Flatpickr puede parsearlo si se setea via instance)
+        // La forma más fácil es usar la instancia de flatpickr
+        const fp = document.getElementById('paciente-fecha-nac')._flatpickr;
+        if (fp) {
+            fp.setDate(p.fecha_nacimiento);
+        } else {
+            document.getElementById('paciente-fecha-nac').value = p.fecha_nacimiento;
+        }
+
         document.getElementById('paciente-apellidos').value = p.apellidos;
         document.getElementById('paciente-nombres').value = p.nombres;
         document.getElementById('paciente-codigo-ver').value = p.codigo_verificacion || '';
@@ -358,6 +375,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         form.reset();
         document.getElementById('paciente-id').value = '';
         
+        // Limpiar flatpickr
+        const fp = document.getElementById('paciente-fecha-nac')._flatpickr;
+        if (fp) fp.clear();
+        
         // Reset disabled states uniformly
         document.querySelectorAll('.standard-input').forEach(el => el.disabled = false);
         
@@ -428,7 +449,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!objectId) {
             payload.dni = document.getElementById('paciente-dni').value.trim();
             payload.historia_clinica = document.getElementById('paciente-hc').value.trim();
-            payload.fecha_nacimiento = document.getElementById('paciente-fecha-nac').value;
+            
+            // Obtener fecha en formato ISO (Y-m-d) para Supabase desde Flatpickr
+            const fp = document.getElementById('paciente-fecha-nac')._flatpickr;
+            if (fp && fp.selectedDates.length > 0) {
+                payload.fecha_nacimiento = fp.formatDate(fp.selectedDates[0], "Y-m-d");
+            } else {
+                payload.fecha_nacimiento = document.getElementById('paciente-fecha-nac').value; // fallback
+            }
+
             payload.apellidos = normalizeText(document.getElementById('paciente-apellidos').value.trim());
             payload.nombres = normalizeText(document.getElementById('paciente-nombres').value.trim());
             payload.codigo_verificacion = document.getElementById('paciente-codigo-ver').value.trim() || null;

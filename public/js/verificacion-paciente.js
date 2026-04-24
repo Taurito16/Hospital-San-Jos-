@@ -242,8 +242,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (isClosed) {
                 document.querySelector('.event-form-section').style.display = 'none';
+                
+                if (!document.getElementById('registro-cerrado-banner')) {
+                    const closedBanner = document.createElement('div');
+                    closedBanner.id = 'registro-cerrado-banner';
+                    closedBanner.style.cssText = 'background: #fef2f2; color: #ef4444; padding: 15px; border-radius: 8px; text-align: center; font-weight: 600; margin-top: 20px; border: 1px solid #fca5a5;';
+                    closedBanner.innerHTML = '<i class="fa-solid fa-lock" style="margin-right: 8px;"></i>Este registro clínico se encuentra cerrado. No se pueden añadir más eventos.';
+                    document.querySelector('.event-form-section').parentElement.appendChild(closedBanner);
+                } else {
+                    document.getElementById('registro-cerrado-banner').style.display = 'block';
+                }
             } else {
                 document.querySelector('.event-form-section').style.display = 'block';
+                if (document.getElementById('registro-cerrado-banner')) {
+                    document.getElementById('registro-cerrado-banner').style.display = 'none';
+                }
             }
 
             // Cambiar titulo
@@ -272,7 +285,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         timelineEmpty.style.display = 'none';
 
-        eventos.forEach(ev => {
+        // Determinar fecha del primer ingreso (Hospitalizado) para cálculos de días
+        let fechaIngreso = null;
+        const primerIngreso = eventos.find(e => e.tipo_evento === 'Hospitalizado');
+        if (primerIngreso) {
+            fechaIngreso = new Date(primerIngreso.fecha_evento);
+        }
+
+        eventos.forEach((ev, index) => {
             const eventEl = document.createElement('div');
             eventEl.className = 'timeline-event';
 
@@ -281,6 +301,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             const fecha = new Date(ev.fecha_evento);
             const fechaStr = fecha.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const horaStr = fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+
+            // Contador de Días en la línea de tiempo (Rango por Evento)
+            let diasTranscurridosHTML = '';
+            
+            if (ev.tipo_evento !== 'Alta' && ev.tipo_evento !== 'Fallecido') {
+                const isUltimoEvento = (index === eventos.length - 1);
+                const fechaFin = isUltimoEvento ? new Date() : new Date(eventos[index + 1].fecha_evento);
+                
+                // Diferencia en días calendario (sin horas)
+                const d1 = new Date(fecha).setHours(0,0,0,0);
+                const d2 = new Date(fechaFin).setHours(0,0,0,0);
+                const dias = Math.max(0, Math.round((d2 - d1) / 86400000));
+                
+                const fechaFinStr = isUltimoEvento ? 'Actual' : fechaFin.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                diasTranscurridosHTML = `<span style="font-size: 12px; color: #64748b; font-weight: 600; margin-left: auto; background: #f1f5f9; padding: 3px 10px; border-radius: 12px; border: 1px solid #e2e8f0;">${dias} ${dias === 1 ? 'día' : 'días'} | ${fechaStr} - ${fechaFinStr}</span>`;
+            } else {
+                // Para Alta o Fallecido solo calculamos los dias totales desde el ingreso si queremos, o nada.
+                if (fechaIngreso) {
+                    const d1 = new Date(fechaIngreso).setHours(0,0,0,0);
+                    const d2 = new Date(fecha).setHours(0,0,0,0);
+                    const diasTotales = Math.max(0, Math.round((d2 - d1) / 86400000));
+                    diasTranscurridosHTML = `<span style="font-size: 12px; color: #10b981; font-weight: 600; margin-left: auto; background: #d1fae5; padding: 3px 10px; border-radius: 12px; border: 1px solid #a7f3d0;">Estancia Total: ${diasTotales} ${diasTotales === 1 ? 'día' : 'días'}</span>`;
+                }
+            }
 
             let detalleHTML = ev.detalle ? '<p class="timeline-detail">' + ev.detalle + '</p>' : '';
 
@@ -297,9 +342,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <i class="${iconClass}"></i>
                 </div>
                 <div class="timeline-content">
-                    <div class="timeline-event-header">
+                    <div class="timeline-event-header" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span class="timeline-event-type ${dotClass}">${ev.tipo_evento}</span>
                         <span class="timeline-event-date">${fechaStr} - ${horaStr}</span>
+                        ${diasTranscurridosHTML}
                     </div>
                     ${detalleHTML}
                 </div>
@@ -352,15 +398,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dias = Math.max(0, Math.ceil((fin - ultimoIngreso) / (1000 * 60 * 60 * 24)));
             diasTexto = dias + (dias === 1 ? ' d\u00EDa' : ' d\u00EDas');
             diasClase = condicion === 'Hospitalizado' ? 'dias-activo' : 'dias-alta';
-            
-            // Adicion: Contador desde Cambio de Servicio
-            if (ultimoCambioServicio) {
-                const diasCS = Math.max(0, Math.ceil((fin - ultimoCambioServicio) / (1000 * 60 * 60 * 24)));
-                diasTexto += ` | CS: ${diasCS} d\u00EDas`;
-            }
         }
 
-        bannerDias.textContent = diasTexto;
+        bannerDias.textContent = diasTexto + " Hospitalizado";
         bannerDias.className = 'dias-badge ' + diasClase;
         bannerCondicion.textContent = condicion;
         bannerCondicion.className = 'condicion-badge ' + getCondicionClass(condicion);
@@ -477,21 +517,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                 bannerInfo.textContent = 'DNI: ' + selectedPatient.dni + ' | HC: ' + selectedPatient.historia_clinica + ' | Seguro: ' + selectedPatient.tipo_seguro + (selectedPatient.seguro_otros ? ' (' + selectedPatient.seguro_otros + ')' : '') + ' | Servicio: ' + (selectedPatient.servicio || 'N/A');
             }
 
-            // Si es un evento terminal, redirigir a detalle
-            if (tipo === 'Alta' || tipo === 'Fallecido') {
-                showToast('Evento registrado exitosamente', '#10b981');
-                setTimeout(() => {
-                    window.location.href = `detalle-paciente.html?dni=${selectedPatient.dni}`;
-                }, 3000);
-                return;
-            }
-
-            showToast('Evento registrado exitosamente', '#10b981');
             eventForm.reset();
             grupoNuevoSeguro.style.display = 'none';
             grupoNuevoSeguroOtros.style.display = 'none';
 
+            // 1. Esperar a que el evento se dibuje en la línea de tiempo
             await loadTimeline();
+
+            if (tipo === 'Alta' || tipo === 'Fallecido') {
+                // 2. Modal de confirmación DESPUÉS del renderizado del timeline
+                const modalBackdrop = document.createElement('div');
+                modalBackdrop.id = 'registro-cerrado-modal-backdrop';
+                modalBackdrop.style.cssText = [
+                    'position:fixed; top:0; left:0; width:100vw; height:100vh;',
+                    'background:rgba(15,23,42,0.6);',
+                    'backdrop-filter:blur(8px);',
+                    '-webkit-backdrop-filter:blur(8px);',
+                    'z-index:9999;',
+                    'display:flex; align-items:center; justify-content:center;',
+                    'animation: fadeInLayout 0.35s forwards;'
+                ].join('');
+
+                const iconColor = tipo === 'Alta' ? '#10b981' : '#ef4444';
+                const iconClass = tipo === 'Alta' ? 'fa-house-medical-circle-check' : 'fa-heart-crack';
+                const titulo = tipo === 'Alta' ? 'Registro Cerrado — Alta' : 'Registro Cerrado — Fallecimiento';
+
+                modalBackdrop.innerHTML = `
+                    <div style="background:#ffffff; border-radius:20px; padding:48px 52px; max-width:480px; width:90%; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+                        <i class="fa-solid ${iconClass}" style="font-size:4rem; color:${iconColor}; margin-bottom:18px;"></i>
+                        <h2 style="font-size:1.6rem; font-weight:700; color:#0f172a; margin-bottom:10px;">${titulo}</h2>
+                        <p style="color:#64748b; font-size:0.95rem; margin-bottom:28px; line-height:1.6;">El evento ha sido registrado correctamente y la línea de tiempo ha sido actualizada. Serás redirigido al detalle del paciente.</p>
+                        <div style="width:100%; background:#e2e8f0; border-radius:99px; height:6px; overflow:hidden;">
+                            <div id="modal-progress-bar" style="width:0%; height:100%; background:${iconColor}; border-radius:99px; transition:width 3s linear;"></div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modalBackdrop);
+
+                // Animar barra de progreso
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const bar = document.getElementById('modal-progress-bar');
+                        if (bar) bar.style.width = '100%';
+                    });
+                });
+
+                setTimeout(() => {
+                    window.location.href = `detalle-paciente.html?dni=${selectedPatient.dni}`;
+                }, 3200);
+            } else {
+                showToast('Evento registrado exitosamente', '#10b981');
+            }
         } catch (err) {
             console.error('Error registrando evento:', err);
             showToast(err.message || 'Error al registrar evento', '#ef4444');
@@ -506,7 +582,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // NAVEGACION
     // ============================================
     btnBackToList.addEventListener('click', () => {
-        window.location.href = 'verificacion-paciente.html';
+        const fromParam = new URLSearchParams(window.location.search).get('from');
+        if (fromParam === 'rpa') {
+            window.location.href = '../consultas/consulta-rapida.html';
+        } else {
+            window.location.href = 'verificacion-paciente.html';
+        }
     });
 
     btnSearch.addEventListener('click', searchPacientes);
