@@ -1,18 +1,21 @@
 FROM ghcr.io/puppeteer/puppeteer:latest
 
-# Cambiar a usuario root temporalmente para evitar problemas de permisos
+# Cambiar a usuario root temporalmente
 USER root
+
+# Crear la carpeta de la app y darle propiedad absoluta al usuario pptruser
+RUN mkdir -p /app && chown -R pptruser:pptruser /app
 
 WORKDIR /app
 
-# Copiar los archivos dándoles propiedad al usuario de puppeteer
+# Copiar los archivos con la propiedad correcta
 COPY --chown=pptruser:pptruser package*.json ./
 COPY --chown=pptruser:pptruser . .
 
 # Volver al usuario seguro de puppeteer
 USER pptruser
 
-# Instalar dependencias
+# Instalar dependencias (ahora sí tiene permisos para crear node_modules)
 RUN npm install
 
 EXPOSE 3000
