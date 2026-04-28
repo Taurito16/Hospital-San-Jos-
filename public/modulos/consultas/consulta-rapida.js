@@ -19,8 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedPatients = [];
     let accumulatedResults = [];
 
-    // NO restaurar filtros desde sessionStorage: se limpian siempre al entrar a este módulo
-    // (El usuario pidió que los filtros y tabla se limpien al salir y volver)
+    // ── PERSISTENCIA DE RESULTADOS ─────────────────────────────────────────────
+    const saveState = () => {
+        try { sessionStorage.setItem('cr_accumulated', JSON.stringify(accumulatedResults)); } catch {}
+    };
+    const restoreState = () => {
+        try {
+            const saved = sessionStorage.getItem('cr_accumulated');
+            if (saved) { accumulatedResults = JSON.parse(saved); renderAccumulatedTable(); }
+        } catch {}
+    };
 
     const showToast = (message, isError = false) => {
         const toast = document.getElementById('toast');
@@ -211,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem('cr_filter_dni');
         sessionStorage.removeItem('cr_filter_hc');
         sessionStorage.removeItem('cr_filter_apellidos');
+        sessionStorage.removeItem('cr_accumulated');
         tbodyPacientes.innerHTML = '';
         tablePacientes.style.display = 'none';
         actionsBar.style.display = 'none';
@@ -265,21 +274,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (result.success) {
-                    // Si el bot extrajo datos correctamente (o "NO TIENE DERECHO DE COBERTURA")
                     const extraido = result.tipo_seguro_extraido || 'SIN RESULTADOS';
                     let estadoVal = 'ALERTA';
+                    let badgeClass = 'badge-alerta';
 
-                    // Simple comparativa con lo declarado
-                    if (paciente.tipo_seguro && extraido !== 'SIN RESULTADOS') {
-                        // Si el extraído contiene lo declarado (ej: ESSALUD vs ESSALUD Regular)
-                        if (extraido.toUpperCase().includes(paciente.tipo_seguro.toUpperCase()) || paciente.tipo_seguro.toUpperCase().includes(extraido.toUpperCase())) {
+                    if (extraido === 'NO TIENE DERECHO DE COBERTURA') {
+                        // Resultado válido del sistema EsSalud → CORRECTO
+                        estadoVal = 'CORRECTO';
+                        badgeClass = 'badge-ok';
+                    } else if (paciente.tipo_seguro && extraido !== 'SIN RESULTADOS') {
+                        if (extraido.toUpperCase().includes(paciente.tipo_seguro.toUpperCase()) ||
+                            paciente.tipo_seguro.toUpperCase().includes(extraido.toUpperCase())) {
                             estadoVal = 'OK';
+                            badgeClass = 'badge-ok';
                         }
                     }
 
                     // Actualizar UI
                     extCell.textContent = extraido;
-                    badgeCell.innerHTML = `<span class="${estadoVal === 'OK' ? 'badge-ok' : 'badge-alerta'}">${estadoVal}</span>`;
+                    badgeCell.innerHTML = `<span class="${badgeClass}">${estadoVal}</span>`;
+
+                    // Actualizar objeto en accumulatedResults para persistencia
+                    const idx = accumulatedResults.findIndex(r => r.id === paciente.id);
+                    if (idx !== -1) {
+                        accumulatedResults[idx].tipo_seguro_validado = extraido;
+                        accumulatedResults[idx].estado_validacion = estadoVal;
+                    }
 
                     // Guardar en BD
                     await supabaseClient.from('pacientes').update({
@@ -313,9 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Unblock UI
         const overlayToRemove = document.getElementById('rpa-blocking-overlay');
-        if (overlayToRemove) {
-            document.body.removeChild(overlayToRemove);
-        }
+        if (overlayToRemove) document.body.removeChild(overlayToRemove);
 
         btnValidar.disabled = false;
         spinner.style.display = 'none';
@@ -324,6 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
         selectedPatients = [];
         updateActionsBar();
+
+        // Persistir resultados para que al volver al módulo sigan visibles
+        saveState();
 
         if (successCount > 0) showToast(`Validación completada (${successCount} procesados)`);
     });
@@ -349,8 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500); // Pequeño retardo para asegurar que la tabla renderizó
         });
     } else {
-        if (inputDNI.value || inputHC.value || inputApellidos.value) {
-            loadPacientes();
-        }
+        // Restaurar tabla/resultados de sesión anterior
+        restoreState();
     }
 });

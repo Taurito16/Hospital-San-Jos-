@@ -402,8 +402,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         bannerDias.textContent = diasTexto + " Hospitalizado";
         bannerDias.className = 'dias-badge ' + diasClase;
-        bannerCondicion.textContent = condicion;
-        bannerCondicion.className = 'condicion-badge ' + getCondicionClass(condicion);
+
+        // Si el paciente sigue Hospitalizado, el badge de condición es redundante
+        // porque bannerDias ya dice "X días Hospitalizado". Solo mostrar para Alta/Fallecido.
+        if (condicion === 'Hospitalizado') {
+            bannerCondicion.style.display = 'none';
+        } else {
+            bannerCondicion.style.display = '';
+            bannerCondicion.textContent = condicion;
+            bannerCondicion.className = 'condicion-badge ' + getCondicionClass(condicion);
+        }
     };
 
     // ============================================
