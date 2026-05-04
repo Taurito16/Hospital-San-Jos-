@@ -1,20 +1,14 @@
-# Usar imagen oficial de Node con dependencias de Playwright
-FROM mcr.microsoft.com/playwright:v1.40.0-focal
+# Usar una versión específica y estable para Railway
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
 
-# Directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de dependencia
+# Optimizar caché de npm
 COPY package*.json ./
-
-# Instalar dependencias (solo producción para ahorrar espacio)
 RUN npm install --only=production
 
-# Copiar código fuente
-COPY . .
+# Copiar solo el código necesario
+COPY server.js ./
 
-# Exponer puerto para Koyeb
-EXPOSE 10000
-
-# Comando de inicio
+# Railway asigna el puerto automáticamente
 CMD ["npm", "start"]
