@@ -473,6 +473,89 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ============================================
+    // OBTENER FECHA DE NACIMIENTO (Cloudflare Worker)
+    // ============================================
+    const WORKER_URL = 'https://dni-lookup-api.josue-rpa.workers.dev';
+    const btnObtenerFnac = document.getElementById('btn-obtener-fnac');
+    const btnFnacText = document.getElementById('btn-fnac-text');
+    const fnacSpinner = document.getElementById('fnac-spinner');
+
+    btnObtenerFnac.addEventListener('click', async () => {
+        const dniValue = inputDni.value.trim();
+
+        if (!dniValue || dniValue.length !== 8) {
+            document.getElementById('toast-text').textContent = 'Ingrese un DNI válido de 8 dígitos primero';
+            toast.style.display = 'flex';
+            toast.style.background = '#ef4444';
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.style.display = 'none', 400);
+            }, 3000);
+            return;
+        }
+
+        // Estado visual: cargando
+        btnObtenerFnac.disabled = true;
+        btnFnacText.textContent = 'Consultando...';
+        fnacSpinner.style.display = 'inline-block';
+
+        try {
+            const response = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dni: dniValue })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.fecha_nac) {
+                // Rellenar el campo visual con dd/mm/yyyy usando Flatpickr
+                const fechaInput = document.getElementById('paciente-fecha-nac');
+                fechaInput.value = result.fecha_nac;
+
+                // Parsear y setear en Flatpickr para que lo reconozca internamente
+                if (fpInstance) {
+                    fpInstance.setDate(result.fecha_nac, true, 'd/m/Y');
+                }
+
+                // Toast de éxito
+                document.getElementById('toast-text').textContent = `Fecha obtenida: ${result.fecha_nac}`;
+                toast.style.display = 'flex';
+                toast.style.background = '#10b981';
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.style.display = 'none', 400);
+                }, 3000);
+            } else {
+                document.getElementById('toast-text').textContent = result.error || 'No se encontró fecha para este DNI';
+                toast.style.display = 'flex';
+                toast.style.background = '#ef4444';
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.style.display = 'none', 400);
+                }, 3500);
+            }
+        } catch (err) {
+            console.error('Error Worker:', err);
+            document.getElementById('toast-text').textContent = 'Error de conexión con el servicio';
+            toast.style.display = 'flex';
+            toast.style.background = '#ef4444';
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.style.display = 'none', 400);
+            }, 3500);
+        } finally {
+            btnObtenerFnac.disabled = false;
+            btnFnacText.textContent = 'Obtener Fecha de Nacimiento';
+            fnacSpinner.style.display = 'none';
+        }
+    });
+
     btnNew.addEventListener('click', () => {
         viewLista.style.display = 'none';
         moduleCommands.style.display = 'none'; // Ocultar módulos operativos locales

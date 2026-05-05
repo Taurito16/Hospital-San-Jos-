@@ -117,27 +117,6 @@ async function scrapePaciente(paciente, browser) {
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await delay(2000);
 
-        // DEBUG: listar todos los elementos que el robot puede ver
-        const debugInfo = await page.evaluate(() => {
-            const allTags = [...new Set(Array.from(document.querySelectorAll('*')).map(e => e.tagName.toLowerCase()))];
-            const checkboxes = document.querySelectorAll('input[type="checkbox"], mat-checkbox, .mat-checkbox, .mdc-checkbox');
-            const buttons = Array.from(document.querySelectorAll('button')).map(b => b.textContent.trim().substring(0, 30));
-            return {
-                hasMatCheckbox: allTags.includes('mat-checkbox'),
-                checkboxCount: checkboxes.length,
-                checkboxSelectors: Array.from(checkboxes).map(c => c.tagName + '.' + c.className.substring(0, 50)),
-                buttons,
-                pageTitle: document.title,
-                bodySnippet: document.body.innerText.substring(0, 300)
-            };
-        });
-        console.log(`[DEBUG] Página: ${debugInfo.pageTitle}`);
-        console.log(`[DEBUG] mat-checkbox existe: ${debugInfo.hasMatCheckbox}`);
-        console.log(`[DEBUG] Checkboxes encontrados: ${debugInfo.checkboxCount}`);
-        console.log(`[DEBUG] Selectores: ${JSON.stringify(debugInfo.checkboxSelectors)}`);
-        console.log(`[DEBUG] Botones: ${JSON.stringify(debugInfo.buttons)}`);
-        console.log(`[DEBUG] Texto visible: ${debugInfo.bodySnippet.substring(0, 200)}`);
-
         // Intentar múltiples selectores para el checkbox
         let checkboxClicked = false;
         const checkboxSelectors = [

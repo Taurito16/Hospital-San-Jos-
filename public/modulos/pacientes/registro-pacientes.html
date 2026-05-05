@@ -80,10 +80,20 @@
             <!-- FORMULARIO -->
             <div id="view-form" style="display: none; margin-top: 20px;">
                 <div class="standard-form-container blue-toptag-form">
-                    <h3
-                        style="margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; color: #0f172a; font-size: 20px; font-weight: 700;">
-                        Datos del Nuevo Paciente
-                    </h3>
+                    <div
+                        style="margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: #0f172a; font-size: 20px; font-weight: 700;">
+                            Datos del Nuevo Paciente
+                        </h3>
+                        <button type="button" id="btn-obtener-fnac"
+                            style="display: flex; align-items: center; gap: 8px; background: #eff6ff; color: #2563eb; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;"
+                            onmouseover="this.style.background='#dbeafe'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.15)'; this.style.transform='translateY(-1px)'"
+                            onmouseout="this.style.background='#eff6ff'; this.style.boxShadow='none'; this.style.transform='none'">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span id="btn-fnac-text">Obtener Fecha de Nacimiento</span>
+                            <i id="fnac-spinner" class="fa-solid fa-circle-notch fa-spin" style="display:none;"></i>
+                        </button>
+                    </div>
 
                     <form id="registro-form">
                         <input type="hidden" id="paciente-id">
